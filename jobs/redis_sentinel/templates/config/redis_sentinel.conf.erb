@@ -1,0 +1,418 @@
+<%- sentinel=link('redis_sentinel_conn') -%>
+# *** IMPORTANT ***
+#
+# By default Sentinel will not be reachable from interfaces different than
+# localhost, either use the 'bind' directive to bind to a list of network
+# interfaces, or disable protected mode with "protected-mode no" by
+# adding it to this configuration file.
+#
+# Before doing that MAKE SURE the instance is protected from the outside
+# world via firewalling or other means.
+#
+# For example you may use one of the following:
+#
+# bind 127.0.0.1 192.168.1.1
+#
+# protected-mode no
+<%- if sentinel.p('bind') -%>
+bind <%= spec.ip %>
+<%- else -%>
+bind 127.0.0.1
+<%- end -%>
+
+# port <sentinel-port>
+# The port that this sentinel instance will run on
+port <%= sentinel.p('port') %>
+
+# By default Redis Sentinel does not run as a daemon. Use 'yes' if you need it.
+# Note that Redis will write a pid file in /var/run/redis-sentinel.pid when
+# daemonized.
+daemonize yes
+
+# When running daemonized, Redis Sentinel writes a pid file in
+# /var/run/redis-sentinel.pid by default. You can specify a custom pid file
+# location here.
+pidfile "<%= p('run_dir')+'/'+p('pidfile') %>"
+
+# Specify the log file name. Also the empty string can be used to force
+# Sentinel to log on the standard output. Note that if you use standard
+# output for logging but daemonize, logs will be sent to /dev/null
+logfile "<%= p('log_dir')+'/'+p('logfile') %>"
+
+# sentinel announce-ip <ip>
+# sentinel announce-port <port>
+#
+# The above two configuration directives are useful in environments where,
+# because of NAT, Sentinel is reachable from outside via a non-local address.
+#
+# When announce-ip is provided, the Sentinel will claim the specified IP address
+# in HELLO messages used to gossip its presence, instead of auto-detecting the
+# local address as it usually does.
+#
+# Similarly when announce-port is provided and is valid and non-zero, Sentinel
+# will announce the specified TCP port.
+#
+# The two options don't need to be used together, if only announce-ip is
+# provided, the Sentinel will announce the specified IP and the server port
+# as specified by the "port" option. If only announce-port is provided, the
+# Sentinel will announce the auto-detected local IP and the specified port.
+#
+# Example:
+#
+# sentinel announce-ip 1.2.3.4
+<%- if p('announce') && sentinel.p('bind')
+    sentinel_port=sentinel.p('port')
+    if sentinel.p('tls')
+      sentinel_port=sentinel.p('tls_port')
+    end -%>
+sentinel announce-ip <%= spec.ip %>
+sentinel announce-port <%= sentinel_port %>
+<%- end -%>
+
+# dir <working-directory>
+# Every long running process should have a well-defined working directory.
+# For Redis Sentinel to chdir to /tmp at startup is the simplest thing
+# for the process to don't interfere with administrative tasks such as
+# unmounting filesystems.
+dir "<%= p('dir') %>"
+
+<%- if sentinel.p('tls') -%>
+################################# TLS/SSL #####################################
+
+# By default, TLS/SSL is disabled. To enable it, the "tls-port" configuration
+# directive can be used to define TLS-listening ports. To enable TLS on the
+# default port, use:
+#
+# port 0
+# tls-port 6379
+tls-port <%= sentinel.p('tls_port') %>
+
+# Configure a X.509 certificate and private key to use for authenticating the
+# server to connected clients, masters or cluster peers.  These files should be
+# PEM formatted.
+#
+# tls-cert-file redis.crt 
+# tls-key-file redis.key
+tls-cert-file "<%= p('tls_keys_dir')+'/'+p('tls_cert_file') %>"
+tls-key-file "<%= p('tls_keys_dir')+'/'+p('tls_key_file') %>"
+
+# Configure a DH parameters file to enable Diffie-Hellman (DH) key exchange:
+#
+# tls-dh-params-file redis.dh
+tls-dh-params-file "<%= p('tls_keys_dir')+'/'+p('tls_dh_params_file') %>"
+
+# Configure a CA certificate(s) bundle or directory to authenticate TLS/SSL
+# clients and peers.  Redis requires an explicit configuration of at least one
+# of these, and will not implicitly use the system wide configuration.
+#
+# tls-ca-cert-file ca.crt
+# tls-ca-cert-dir /etc/ssl/certs
+tls-ca-cert-file "<%= p('tls_keys_dir')+'/'+p('tls_ca_cert_file') %>"
+tls-ca-cert-dir "<%= p('tls_ca_cert_dir') %>"
+
+# By default, clients (including replica servers) on a TLS port are required
+# to authenticate using valid client side certificates.
+#
+# It is possible to disable authentication using this directive.
+#
+# tls-auth-clients no
+<%- if !sentinel.p('tls_auth_clients') -%>
+tls-auth-clients no
+<%- end -%>
+
+# By default, a Redis replica does not attempt to establish a TLS connection
+# with its master.
+#
+# Use the following directive to enable TLS on replication links.
+#
+# tls-replication yes
+<%- if sentinel.p('tls_replication') -%>
+tls-replication yes
+<%- end -%>
+
+# Explicitly specify TLS versions to support. Allowed values are case insensitive
+# and include "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3" (OpenSSL >= 1.1.1) or
+# any combination. To enable only TLSv1.2 and TLSv1.3, use:
+#
+# tls-protocols "TLSv1.2 TLSv1.3"
+<%- sentinel.if_p('tls_protocols') do |protocols|
+    unless protocols.to_s.empty? -%>
+tls-protocols <%= protocols %>
+<%- end
+  end -%>
+
+# Configure allowed ciphers.  See the ciphers(1ssl) manpage for more information
+# about the syntax of this string.
+#
+# Note: this configuration applies only to <= TLSv1.2.
+#
+# tls-ciphers DEFAULT:!MEDIUM
+<%- sentinel.if_p('tls_ciphers') do |ciphers|
+    unless ciphers.to_s.empty? -%>
+tls-ciphers <%= ciphers %>
+<%- end
+  end -%>
+
+# Configure allowed TLSv1.3 ciphersuites.  See the ciphers(1ssl) manpage for more
+# information about the syntax of this string, and specifically for TLSv1.3
+# ciphersuites.
+#
+# tls-ciphersuites TLS_CHACHA20_POLY1305_SHA256
+<%- sentinel.if_p('tls_ciphersuites') do |ciphersuites|
+    unless ciphersuites.to_s.empty? %>
+tls-ciphersuites <%= ciphersuites %>
+<%- end
+  end -%>
+
+# When choosing a cipher, use the server's preference instead of the client
+# preference. By default, the server follows the client's preference.
+#
+# tls-prefer-server-ciphers yes
+<%- if sentinel.p('tls_prefer_server_ciphers') -%>
+tls-prefer-server-ciphers yes
+<%- end -%>
+
+# By default, TLS session caching is enabled to allow faster and less expensive
+# reconnections by clients that support it. Use the following directive to disable
+# caching.
+#
+# tls-session-caching no
+<%- if !p('tls_session_caching') -%>
+tls-session-caching no
+<%- end -%>
+
+# Change the default number of TLS sessions cached. A zero value sets the cache
+# to unlimited size. The default size is 20480.
+#
+# tls-session-cache-size 5000
+tls-session-cache-size <%= p('tls_session_cache_size') %>
+
+# Change the default timeout of cached TLS sessions. The default timeout is 300
+# seconds.
+#
+# tls-session-cache-timeout 60
+tls-session-cache-timeout <%= p('tls_session_cache_timeout') %>
+<%- end -%>
+################################# SECURITY ######################################
+
+# You can also configure the Sentinel instance itself in order to require client
+# authentication via the AUTH command, however this feature is only available starting with
+# Redis 5.0.1.
+#
+# In order to do so, just add the following configuration directive to all your Sentinel
+# instances:
+#
+# requirepass "your_password_here"
+# When configured this way, Sentinels will do two things:
+#
+# 1. A password will be required from clients in order to send commands to Sentinels. This
+# is obvious since this is how such configuration directive works in Redis in general.
+# 2. Moreover the same password configured to access the local Sentinel, will be used by
+# this Sentinel instance in order to authenticate to all the other Sentinel instances it
+# connects to.
+#
+# This means that you will have to configure the same requirepass password in all the
+# Sentinel instances. This way every Sentinel can talk with every other Sentinel without
+# any need to configure for each Sentinel the password to access all the other Sentinels,
+# that would be very impractical.
+#
+# Before using this configuration make sure your client library is able to send the AUTH
+# command to Sentinel instances.
+<%- sentinel.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+requirepass <%= x %>
+<%- end
+  end -%>
+
+################################# SENTINEL MONITORING ###########################
+
+# sentinel monitor <master-name> <ip> <redis-port> <quorum>
+#
+# Tells Sentinel to monitor this master, and to consider it in O_DOWN
+# (Objectively Down) state only if at least <quorum> sentinels agree.
+#
+# Note that whatever is the ODOWN quorum, a Sentinel will require to
+# be elected by the majority of the known Sentinels in order to
+# start a failover, so no failover can be performed in minority.
+#
+# Replicas are auto-discovered, so you don't need to specify replicas in
+# any way. Sentinel itself will rewrite this configuration file adding
+# the replicas using additional configuration options.
+# Also note that the configuration file is rewritten when a
+# replica is promoted to master.
+#
+# Note: master name should not include special characters or spaces.
+# The valid charset is A-z 0-9 and the three characters ".-_".
+# sentinel monitor mymaster 127.0.0.1 6379 2
+
+# sentinel auth-pass <master-name> <password>
+#
+# Set the password to use to authenticate with the master and replicas.
+# Useful if there is a password set in the Redis instances to monitor.
+#
+# Note that the master password is also used for replicas, so it is not
+# possible to set a different password in masters and replicas instances
+# if you want to be able to monitor these instances with Sentinel.
+#
+# However you can have Redis instances without the authentication enabled
+# mixed with Redis instances requiring the authentication (as long as the
+# password set is the same for all the instances requiring the password) as
+# the AUTH command will have no effect in Redis instances with authentication
+# switched off.
+#
+# Example:
+#
+# sentinel auth-pass mymaster MySUPER--secret-0123passw0rd
+
+# sentinel auth-user <master-name> <username>
+#
+# This is useful in order to authenticate to instances having ACL capabilities,
+# that is, running Redis 6.0 or greater. When just auth-pass is provided the
+# Sentinel instance will authenticate to Redis using the old "AUTH <pass>"
+# method. When also an username is provided, it will use "AUTH <user> <pass>".
+# In the Redis servers side, the ACL to provide just minimal access to
+# Sentinel instances, should be configured along the following lines:
+#
+#     user sentinel-user >somepassword +client +subscribe +publish \
+#                        +ping +info +multi +slaveof +config +client +exec on
+
+# sentinel down-after-milliseconds <master-name> <milliseconds>
+#
+# Number of milliseconds the master (or any attached replica or sentinel) should
+# be unreachable (as in, not acceptable reply to PING, continuously, for the
+# specified period) in order to consider it in S_DOWN state (Subjectively
+# Down).
+#
+# Default is 30 seconds.
+# sentinel down-after-milliseconds mymaster 30000
+
+# sentinel parallel-syncs <master-name> <numreplicas>
+#
+# How many replicas we can reconfigure to point to the new replica simultaneously
+# during the failover. Use a low number if you use the replicas to serve query
+# to avoid that all the replicas will be unreachable at about the same
+# time while performing the synchronization with the master.
+# sentinel parallel-syncs mymaster 1
+
+# sentinel failover-timeout <master-name> <milliseconds>
+#
+# Specifies the failover timeout in milliseconds. It is used in many ways:
+#
+# - The time needed to re-start a failover after a previous failover was
+#   already tried against the same master by a given Sentinel, is two
+#   times the failover timeout.
+#
+# - The time needed for a replica replicating to a wrong master according
+#   to a Sentinel current configuration, to be forced to replicate
+#   with the right master, is exactly the failover timeout (counting since
+#   the moment a Sentinel detected the misconfiguration).
+#
+# - The time needed to cancel a failover that is already in progress but
+#   did not produced any configuration change (SLAVEOF NO ONE yet not
+#   acknowledged by the promoted replica).
+#
+# - The maximum time a failover in progress waits for all the replicas to be
+#   reconfigured as replicas of the new master. However even after this time
+#   the replicas will be reconfigured by the Sentinels anyway, but not with
+#   the exact parallel-syncs progression as specified.
+#
+# Default is 3 minutes.
+# sentinel failover-timeout mymaster 180000
+
+# SCRIPTS EXECUTION
+#
+# sentinel notification-script and sentinel reconfig-script are used in order
+# to configure scripts that are called to notify the system administrator
+# or to reconfigure clients after a failover. The scripts are executed
+# with the following rules for error handling:
+#
+# If script exits with "1" the execution is retried later (up to a maximum
+# number of times currently set to 10).
+#
+# If script exits with "2" (or an higher value) the script execution is
+# not retried.
+#
+# If script terminates because it receives a signal the behavior is the same
+# as exit code 1.
+#
+# A script has a maximum running time of 60 seconds. After this limit is
+# reached the script is terminated with a SIGKILL and the execution retried.
+
+# NOTIFICATION SCRIPT
+#
+# sentinel notification-script <master-name> <script-path>
+# 
+# Call the specified notification script for any sentinel event that is
+# generated in the WARNING level (for instance -sdown, -odown, and so forth).
+# This script should notify the system administrator via email, SMS, or any
+# other messaging system, that there is something wrong with the monitored
+# Redis systems.
+#
+# The script is called with just two arguments: the first is the event type
+# and the second the event description.
+#
+# The script must exist and be executable in order for sentinel to start if
+# this option is provided.
+#
+# Example:
+#
+# sentinel notification-script mymaster /var/redis/notify.sh
+
+# CLIENTS RECONFIGURATION SCRIPT
+#
+# sentinel client-reconfig-script <master-name> <script-path>
+#
+# When the master changed because of a failover a script can be called in
+# order to perform application-specific tasks to notify the clients that the
+# configuration has changed and the master is at a different address.
+# 
+# The following arguments are passed to the script:
+#
+# <master-name> <role> <state> <from-ip> <from-port> <to-ip> <to-port>
+#
+# <state> is currently always "failover"
+# <role> is either "leader" or "observer"
+# 
+# The arguments from-ip, from-port, to-ip, to-port are used to communicate
+# the old address of the master and the new address of the elected replica
+# (now a master).
+#
+# This script should be resistant to multiple invocations.
+#
+# Example:
+#
+# sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
+
+# SECURITY
+#
+# By default SENTINEL SET will not be able to change the notification-script
+# and client-reconfig-script at runtime. This avoids a trivial security issue
+# where clients can set the script to anything and trigger a failover in order
+# to get the program executed.
+
+sentinel deny-scripts-reconfig yes
+
+# REDIS COMMANDS RENAMING
+#
+# Sometimes the Redis server has certain commands, that are needed for Sentinel
+# to work correctly, renamed to unguessable strings. This is often the case
+# of CONFIG and SLAVEOF in the context of providers that provide Redis as
+# a service, and don't want the customers to reconfigure the instances outside
+# of the administration console.
+#
+# In such case it is possible to tell Sentinel to use different command names
+# instead of the normal ones. For example if the master "mymaster", and the
+# associated replicas, have "CONFIG" all renamed to "GUESSME", I could use:
+#
+# SENTINEL rename-command mymaster CONFIG GUESSME
+#
+# After such configuration is set, every time Sentinel would use CONFIG it will
+# use GUESSME instead. Note that there is no actual need to respect the command
+# case, so writing "config guessme" is the same in the example above.
+#
+# SENTINEL SET can also be used in order to perform this configuration at runtime.
+#
+# In order to set a command back to its original name (undo the renaming), it
+# is possible to just rename a command to itsef:
+#
+# SENTINEL rename-command mymaster CONFIG CONFIG

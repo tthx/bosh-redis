@@ -1,0 +1,12 @@
+set -eu
+
+# Available variables
+# $BOSH_COMPILE_TARGET - where this package & spec'd source files are available
+# $BOSH_INSTALL_TARGET - where you copy/install files to be included in package
+
+tar xf redis/redis-*.tar.gz
+cd redis-*
+make BUILD_TLS=yes PREFIX="${BOSH_INSTALL_TARGET}" install
+strip -s ${BOSH_INSTALL_TARGET}/bin/*
+cd -
+cp -a common/gen-certs.sh ${BOSH_INSTALL_TARGET}/bin/.

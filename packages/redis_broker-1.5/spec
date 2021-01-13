@@ -1,0 +1,6 @@
+---
+name: redis_broker-1.5
+files:
+- common/gen-certs.sh
+- common/utils.sh # From https://github.com/bosh-prometheus/prometheus-boshrelease/blob/master/src/common/utils.sh
+- redis_broker-1.5/broker-1.5-*.jar

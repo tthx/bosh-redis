@@ -1,0 +1,187 @@
+<%- master=link('redis_conn')
+  slave=nil
+  if_link('slave_conn'){ |x| slave=x }
+  sentinel=nil
+  if_link('redis_sentinel_conn') { |x| sentinel=x }
+  sentinel_slave=nil
+  if_link('sentinel_slave_conn') { |x| sentinel_slave=x } -%>
+
+orange:
+  redis:
+    ip_key: <%= p('ip_key') %>
+    port_key: <%= p('port_key') %>
+    password_key: <%= p('password_key') %>
+    admin_user_key: <%= p('admin_user_key') %>
+    admin_password_key: <%= p('admin_password_key') %>
+    ha_master_name_key: <%= p('ha_master_name_key') %>
+    ha_port_key: <%= p('ha_port_key') %>
+    ha_password_key: <%= p('ha_password_key') %>
+    tls_port_key: <%= p('tls_port_key') %>
+    tls_ha_port_key: <%= p('tls_ha_port_key') %>
+    tls_certificate_key: <%= p('tls_certificate_key') %>
+    tls_private_key_key: <%= p('tls_private_key_key') %>
+    tls_ca_key: <%= p('tls_ca_key') %>
+    servers:
+<%- if !sentinel.nil?
+    sentinel.instances.each do |x| -%>
+      - <%= x.address %>
+<%- end
+    if !sentinel_slave.nil?
+      if !sentinel_slave.instances[0].name.eql?(sentinel.instances[0].name)
+        sentinel_slave.instances.each do |x| -%>
+      - <%= x.address %>
+<%-     end
+      end
+    end
+  else
+    master.instances.each do |x| -%>
+      - <%= x.address %>
+<%-  end
+    if !slave.nil?
+      if !slave.instances[0].name.eql?(master.instances[0].name)
+        slave.instances.each do |x| -%>
+      - <%= x.address %>
+<%-     end
+      end
+    end
+  end -%>
+    port: <%= master.p('port') %>
+<%- master.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+    password: <%= x %>
+<%- end
+  end -%>
+    admin_user: <%= master.p('admin_user') %>
+<%- master.if_p('admin_password') do |x|
+    unless x.to_s.empty? -%>
+    admin_password: <%= x %>
+<%- end
+  end
+  if !sentinel.nil? -%>
+    sentinel:
+      port: <%= sentinel.p('port') %>
+<%- sentinel.if_p('password') do |x|
+      unless x.to_s.empty? -%>
+      password: <%= x %>
+<%-   end
+    end -%>
+      master_name: <%= spec.deployment %>
+<%- end
+  if master.p('tls') -%>
+    tls:
+      port: <%= master.p('tls_port') %>
+<%- if !sentinel.nil?
+    if sentinel.p('tls') -%>
+      ha_port: <%= sentinel.p('tls_port') %>
+<%- end
+  end -%>
+      keys_dir: <%= p('tls_keys_dir') %>
+      ca_cert_file: <%= p('tls_ca_cert_file') %>
+      ca_key_file: <%= p('tls_ca_key_file') %>
+      client_key_length: <%= p('tls_client_key_length') %>
+      client_cert_ou: <%= spec.deployment %>
+      client_cert_duration: <%= p('tls_client_cert_duration') %>
+<%- end -%>
+
+server:
+<%- if p('bind') -%>
+  address: <%= spec.ip %>
+<%- else -%>
+  address: 127.0.0.1
+<%- end
+  if p('tls') -%>
+  ssl:
+    enabled: true
+    key-alias: <%= p('tls_server_key_alias') %>
+    key-store-type: PKCS12
+    key-store-password: <%= p('tls_server_pkcs12_password') %>
+    key-store: file:<%= p('tls_keys_dir')+'/'+p('tls_server_pkcs12_file') %>
+  port: <%= p('tls_port') %>
+<%- else -%>
+  port: <%= p('port') %>
+<%- end -%>
+
+logging:
+  config: file:/var/vcap/jobs/redis_broker/config/log4j2.xml
+
+spring:
+  security:
+    user:
+      name: <%= p('user') %>
+      password: <%= p('password') %>
+  cloud:
+    openservicebroker:
+      catalog:
+        services:
+        - description: Redis Service
+          id: redis-service
+          name: Redis Service
+          bindable: true
+          bindingsRetrievable: true
+          instancesRetrievable: true
+          planUpdateable: false
+          metadata:
+            displayName: Redis
+            imageUrl: https://redis.io/images/redis-white.png
+            longDescription: Creating a Redis service. Binding applications provisions unique credentials for each application to access a Redis server/cluster.
+            providerDisplayName: Orange
+            documentationUrl: https://redis.io/documentation
+            supportUrl: https://contact-us/
+          tags:
+            - Redis
+            - Redis Sentinel
+            - Redis Cluster
+            - High Avaibility
+          plans:
+          - description: Redis Single Server
+            id: redis
+            name: Redis
+            free: true
+            metadata:
+              bullets:
+              - 100 MB Storage (not enforced)
+              - 40 concurrent connections (not enforced)
+              costs:
+                amount:
+                  eur: 10.0
+                unit: MONTHLY
+              displayName: Dedicated Single Redis Server
+          - description: Highly Available with Redis Sentinel
+            id: redis-sentinel
+            name: Redis Sentinel
+            free: true
+            metadata:
+              bullets:
+              - 100 MB Storage (not enforced)
+              - 40 concurrent connections (not enforced)
+              costs:
+                amount:
+                  eur: 10.0
+                unit: MONTHLY
+              displayName: Dedicated Highly Available Redis Server with Redis Sentinel
+          - description: Redis Cluster
+            id: redis-cluster
+            name: Redis Cluster
+            free: true
+            metadata:
+              bullets:
+              - 100 MB Storage (not enforced)
+              - 40 concurrent connections (not enforced)
+              costs:
+                amount:
+                  eur: 10.0
+                unit: MONTHLY
+              displayName: Dedicated Redis Cluster
+          - description: Highly Available Redis Cluster
+            id: redis-cluster-ha
+            name: High Available Redis Cluster
+            free: true
+            metadata:
+              bullets:
+              - 100 MB Storage (not enforced)
+              - 40 concurrent connections (not enforced)
+              costs:
+                amount:
+                  eur: 10.0
+                unit: MONTHLY
+              displayName: Dedicated Highly Available Redis Cluster
