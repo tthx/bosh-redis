@@ -1,3 +1,12 @@
+## redis-orange 1.0.3.1
+- Added post-start to support BOSH recreate.
+- Components update:
+  - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
+  - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.15.1,
+  - [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 -> 2.4.2,
+  - [*Spring Cloud Open Service Broker*](https://spring.io/projects/spring-cloud-open-service-broker) 3.1.2 -> 3.2.0,
+  - [*havegd*](https://www.issihosts.com/haveged/) 1.9.13 -> 1.9.14.
+
 ## redis-orange 1.0.3
 
 - Added features introduced in Redis 6.x:

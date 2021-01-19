@@ -8,7 +8,7 @@ A [*Redis*](https://redis.io/) release for Cloud Foundry
 - [*Redis cluster*](https://redis.io/topics/cluster-spec) with high availability,
 - Multi-zone for high availability by Redis Sentinel and Redis cluster with high availability,
 - Monitoring by [*Prometheus*](https://prometheus.io/)/[*Grafana*](https://grafana.com/),
-- An Open Service Broker with [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 and [*Spring Cloud Open Service Broker*](https://spring.io/projects/spring-cloud-open-service-broker) 3.1.2 and another broker with *Spring Boot* 1.5.22 and [*Spring Cloud - Cloud Foundry Service Broker*](https://spring.io/projects/spring-cloud-cloudfoundry-service-broker) 1.0.4.
+- An Open Service Broker with [*Spring Boot*](https://spring.io/projects/spring-boot) 2.4.2 and [*Spring Cloud Open Service Broker*](https://spring.io/projects/spring-cloud-open-service-broker) 3.2.0 and another broker with *Spring Boot* 1.5.22 and [*Spring Cloud - Cloud Foundry Service Broker*](https://spring.io/projects/spring-cloud-cloudfoundry-service-broker) 1.0.4.
 
 ## TODO
 
@@ -17,11 +17,11 @@ A [*Redis*](https://redis.io/) release for Cloud Foundry
 
 ## Packages versions summary
 
-- Redis [*6.0.9*](https://download.redis.io/releases/redis-6.0.9.tar.gz)
-- [*redis_exporter*](https://github.com/oliver006/redis_exporter) [*1.12.1*](https://github.com/oliver006/redis_exporter/releases/download/v1.12.1/redis_exporter-v1.12.1.linux-amd64.tar.gz)
+- Redis [*6.0.10*](https://download.redis.io/releases/redis-6.0.10.tar.gz)
+- [*redis_exporter*](https://github.com/oliver006/redis_exporter) [*1.15.1*](https://github.com/oliver006/redis_exporter/releases/download/v1.15.1/redis_exporter-v1.15.1.linux-amd64.tar.gz)
 - [*redis_sentinel_exporter*](https://github.com/leominov/redis_sentinel_exporter) [*1.7.1*](https://github.com/leominov/redis_sentinel_exporter/releases/download/v1.7.1/redis_sentinel_exporter-1.7.1.linux-amd64.tar.gz)
 - [*OpenJDK*](https://openjdk.java.net/) [*15.0.1*](https://download.java.net/java/GA/jdk15.0.1/51f4f36ad4ef43e39d0dfdbaf6549e32/9/GPL/openjdk-15.0.1_linux-aarch64_bin.tar.gz)
-- [*havegd*](https://www.issihosts.com/haveged/) [*1.9.13*](https://github.com/jirka-h/haveged/releases/tag/v1.9.13)
+- [*havegd*](https://www.issihosts.com/haveged/) [*1.9.14*](https://github.com/jirka-h/haveged/releases/tag/v1.9.14)
 - [*utils.sh*](https://github.com/bosh-prometheus/prometheus-boshrelease/blob/master/src/common/utils.sh)
 
 ## Memory Management
