@@ -1,29 +1,69 @@
 #!/bin/bash
-<%- master=link('redis_conn') -%>
+<%- master=link('redis_conn')
+  sentinel=nil
+  if_link('redis_sentinel_conn'){ |x| sentinel=x }
+  sentinel_slave=nil
+  if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
 ERR=0;
-REDIS_HOME="/var/vcap/packages/redis";
-CLI="${REDIS_HOME}/bin/redis-cli";
+CLI="/var/vcap/packages/redis/bin/redis-cli";
 
-IP="127.0.0.1";
+REDIS_IP="127.0.0.1";
 <%- if master.p('bind') -%>
-IP="<%= spec.ip %>";
+REDIS_IP="<%= spec.ip %>";
 <%- end -%>
-
-PORT="<%= master.p('port') %>";
-CRED="--user <%= master.p('admin_user') %>";
+REDIS_PORT="<%= master.p('port') %>";
+REDIS_CRED="--user <%= master.p('admin_user') %>";
 <%- master.if_p('admin_password') do |x|
     unless x.to_s.empty? -%>
-CRED+=" --pass <%= x %>";
+REDIS_CRED+=" --pass <%= x %>";
 <%- end
   end
   if master.p('tls') -%>
-PORT="<%= master.p('tls_port') %>";
+REDIS_PORT="<%= master.p('tls_port') %>";
 TLS_KEYS_DIR="<%= p('tls_keys_dir') %>";
-CRED+=" --tls --cert ${TLS_KEYS_DIR}/<%= p('tls_cert_file') %>";
-CRED+=" --key ${TLS_KEYS_DIR}/<%= p('tls_key_file') %>";
-CRED+=" --cacert ${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
+TLS_CERT_FILE="${TLS_KEYS_DIR}/<%= p('tls_cert_file') %>";
+REDIS_CRED+=" --tls --cert ${TLS_CERT_FILE}";
+TLS_KEY_FILE="${TLS_KEYS_DIR}/<%= p('tls_key_file') %>";
+REDIS_CRED+=" --key ${TLS_KEY_FILE}";
+TLS_CA_CERT_FILE="${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
+REDIS_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
 <%- end -%>
+
+<%- if !sentinel.nil? && master.p('replication') -%>
+SENTINEL_PORT="<%= sentinel.p('port') %>";
+SENTINEL_CRED="";
+<%- sentinel.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+SENTINEL_CRED="-a <%= x %>";
+<%- end
+  end 
+  if sentinel.p('tls') -%>
+SENTINEL_PORT="<%= sentinel.p('tls_port') %>";
+SENTINEL_CRED+=" --tls --cert ${TLS_CERT_FILE}";
+SENTINEL_CRED+=" --key ${TLS_KEY_FILE}";
+SENTINEL_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
+<%- end
+  sentinel_addresses=''
+  sentinel.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
+  if !sentinel_slave.nil?
+    sentinel_slave.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
+  end -%>
+SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
+for x in ${SENTINEL_ADDRESSES};
+do
+  MSG="$("${CLI}" \
+    -h "${x}" \
+    -p "${SENTINEL_PORT}" \
+    ${SENTINEL_CRED} \
+    SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
+  if [[ ${?} -eq 0 ]];
+  then
+    ERR=1;
+    echo "ERROR: Commands failed with Sentinel \"${x}\": \"${MSG}\".";
+    break;
+  fi
+done
 
 x="$("${CLI}" \
   -h ${IP} \
@@ -57,5 +97,6 @@ then
 else
   ERR=1;
 fi
+<%- end -%>
 
 exit ${ERR};
