@@ -1,0 +1,61 @@
+#!/bin/bash
+<%- master=link('redis_conn') -%>
+
+ERR=0;
+REDIS_HOME="/var/vcap/packages/redis";
+CLI="${REDIS_HOME}/bin/redis-cli";
+
+IP="127.0.0.1";
+<%- if master.p('bind') -%>
+IP="<%= spec.ip %>";
+<%- end -%>
+
+PORT="<%= master.p('port') %>";
+CRED="--user <%= master.p('admin_user') %>";
+<%- master.if_p('admin_password') do |x|
+    unless x.to_s.empty? -%>
+CRED+=" --pass <%= x %>";
+<%- end
+  end
+  if master.p('tls') -%>
+PORT="<%= master.p('tls_port') %>";
+TLS_KEYS_DIR="<%= p('tls_keys_dir') %>";
+CRED+=" --tls --cert ${TLS_KEYS_DIR}/<%= p('tls_cert_file') %>";
+CRED+=" --key ${TLS_KEYS_DIR}/<%= p('tls_key_file') %>";
+CRED+=" --cacert ${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
+<%- end -%>
+
+x="$("${CLI}" \
+  -h ${IP} \
+  -p ${PORT} \
+  ${CRED} \
+  ROLE)";
+if [[ ${?} -eq 0 ]];
+then
+  if [[ "slave" == "$(echo -e "${x}"|grep "slave")" ]];
+  then
+    connected=0;
+    while [[ ${connected} -eq 0 ]] || [[ ${ERR} -eq 0 ]];
+    do
+      x="$("${CLI}" \
+        -h ${IP} \
+        -p ${PORT} \
+        ${CRED} \
+        ROLE)";
+      if [[ ${?} -eq 0 ]]; 
+      then
+        if [[ "connected" == "$(echo -e "${x}"|grep "connected")" ]];
+        then
+          connected=1;
+          echo "Redis replica [${IP}:${PORT}] is connected";
+        fi
+      else
+        ERR=1;
+      fi
+    done
+  fi
+else
+  ERR=1;
+fi
+
+exit ${ERR};
