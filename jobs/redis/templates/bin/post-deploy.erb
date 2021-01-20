@@ -70,24 +70,42 @@ SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> FAILOVER-TIMEOUT <%= master.p
     sentinel_slave.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
   end -%>
 SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
-SENTINEL_DONE="";
+
+SENTINEL_TODO="";
 for x in ${SENTINEL_ADDRESSES};
+do
+  MSG="$("${CLI}" \
+    -h "${x}" \
+    -p "${SENTINEL_PORT}" \
+    ${SENTINEL_CRED} \
+    SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
+  if [[ ${?} -eq 0 ]] && [[ -n "${MSG}" ]];
+  then
+    echo "Sentinel [${x}] already monitor [<%= spec.deployment %>].";
+  else
+    SENTINEL_TODO+="${x} ";
+  fi
+done
+
+SENTINEL_DONE="";
+for x in ${SENTINEL_TODO};
 do
   MSG="$(echo -e "${SENTINEL_CMD}" | \
     "${CLI}" \
       -h "${x}" \
       -p "${SENTINEL_PORT}" \
       ${SENTINEL_CRED})";
-  if [[ ! ${?} -eq 0 ]];
+  ERR=${?};
+  if [[ ! ${ERR} -eq 0 ]];
   then
-    ERR=1;
     echo "ERROR: Commands failed with Sentinel \"${x}\": \"${MSG}\".";
     break;
   fi
+  echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
   SENTINEL_DONE+="${x} ";
 done
 
-if [[ ${ERR} -eq 1 ]];
+if [[ ! ${ERR} -eq 0 ]];
 then
   for x in ${SENTINEL_DONE};
   do
@@ -96,6 +114,7 @@ then
       -p "${SENTINEL_PORT}" \
       ${SENTINEL_CRED} \
       SENTINEL REMOVE <%= spec.deployment %>;
+    echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
   done
 fi
 <%- end -%>
