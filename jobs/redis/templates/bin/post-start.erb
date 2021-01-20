@@ -64,8 +64,8 @@ do
     SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
   if [[ ${?} -eq 0 ]] && \
     [[ -n "${MSG}" ]] && \
-    [[ "${REDIS_IP}" != "$(echo -e "${MSG}"|grep "${REDIS_IP}" || \
-    "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}" ]];
+    [[ "${REDIS_IP}" != "$(echo -e "${MSG}"|grep "${REDIS_IP}")" || \
+    "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}")" ]];
   then
     is_replica=1;
     echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
