@@ -10,7 +10,7 @@ templates:
   bin/redis_ctl.erb: bin/redis_ctl
   bin/post-start.erb: bin/post-start
   bin/post-deploy.erb: bin/post-deploy
-  bin/post-stop.erb: bin/post-stop
+  bin/pre-stop.erb: bin/pre-stop
 
 packages:
 - redis
