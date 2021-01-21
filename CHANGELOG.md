@@ -1,5 +1,6 @@
 ## redis-orange 1.0.3.1
 - Added post-start to support BOSH recreate.
+- Added post-stop to remove Redis group from shared Redis Sentinel.
 - Components update:
   - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
   - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.15.1,

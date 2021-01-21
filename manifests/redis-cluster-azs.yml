@@ -12,7 +12,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_conn: {as: master}
     consumes:
@@ -29,12 +29,12 @@ instance_groups:
       replica_password: ((redis_replica_password))
       cluster_replicas_per_node: ((replicas_per_node_count))
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_conn: {from: master}
       slave_conn: {from: slave}
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_conn: {from: master}
 - name: redis-slave
@@ -47,19 +47,19 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_conn: {as: slave}
     consumes:
       redis_conn: {from: master}
       slave_conn: {from: slave}
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_conn: {from: master}
       slave_conn: {from: slave}
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_conn: {from: master}
 - name: broker
@@ -72,7 +72,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis_broker
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_conn: {from: master}
       slave_conn: {from: slave}
@@ -80,7 +80,7 @@ instance_groups:
       bind: ((redis_bind))
       password: ((redis_broker_password))
   - name: redis_broker_check
-    release: redis-service
+    release: ((release_name))
 
 variables:
 - name: redis_password
@@ -110,7 +110,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

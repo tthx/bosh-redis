@@ -12,9 +12,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis
-    release: redis-service
+    release: ((release_name))
     properties:
       bind: ((redis_bind))
       port: '0'
@@ -28,17 +28,17 @@ instance_groups:
       tls_ca_private_key: ((redis_ca_private_key))
       tls_dh_length: ((redis_dh_length))
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
   - name: redis_broker-1.5
-    release: redis-service
+    release: ((release_name))
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
       tls: true
   - name: redis_broker_check-1.5
-    release: redis-service
+    release: ((release_name))
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
     properties:
       skip_tls_verification: true
 
@@ -66,7 +66,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

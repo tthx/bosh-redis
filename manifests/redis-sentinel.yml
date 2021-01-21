@@ -12,7 +12,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       sentinel_slave_conn: nil
@@ -27,19 +27,19 @@ instance_groups:
       replica_password: ((redis_replica_password))
       sentinel_password: ((redis_sentinel_user_password))
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       sentinel_slave_conn: nil
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     properties:
       bind: ((redis_bind))
       password: ((redis_sentinel_password))
   - name: redis_sentinel_exporter
-    release: redis-service
+    release: ((release_name))
 - name: broker
   azs: [((default_az))]
   instances: 1
@@ -50,7 +50,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis_broker
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       sentinel_slave_conn: nil
@@ -58,7 +58,7 @@ instance_groups:
       bind: ((redis_bind))
       password: ((redis_broker_password))
   - name: redis_broker_check
-    release: redis-service
+    release: ((release_name))
 
 variables:
 - name: redis_password
@@ -96,7 +96,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

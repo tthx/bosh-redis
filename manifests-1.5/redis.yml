@@ -12,7 +12,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis
-    release: redis-service
+    release: ((release_name))
     properties:
       bind: ((redis_bind))
       password: ((redis_password))
@@ -21,16 +21,16 @@ instance_groups:
       maxmemory: ((redis_maxmemory))
       maxmemory_policy: ((redis_maxmemory_policy))
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
   - name: redis_broker-1.5
-    release: redis-service
+    release: ((release_name))
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
   - name: redis_broker_check-1.5
-    release: redis-service
+    release: ((release_name))
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
 
 variables:
 - name: redis_password
@@ -56,7 +56,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

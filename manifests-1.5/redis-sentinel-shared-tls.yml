@@ -12,9 +12,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: ((shared_sentinel_master)), shared: true}
     consumes:
@@ -38,9 +38,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: ((shared_sentinel_slave)), shared: true}
     consumes:
@@ -60,7 +60,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

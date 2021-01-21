@@ -12,9 +12,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
@@ -34,19 +34,19 @@ instance_groups:
       tls_dh_length: ((redis_dh_length))
       tls_replication: true
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
       sentinel_slave_conn: {from: sentinel_slave}
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_sentinel_conn: {from: sentinel_master}
     properties:
       skip_tls_verification: true
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: sentinel_master}
     consumes:
@@ -70,9 +70,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: sentinel_slave}
     consumes:
@@ -89,9 +89,9 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: haveged
-    release: redis-service
+    release: ((release_name))
   - name: redis_broker
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
@@ -101,7 +101,7 @@ instance_groups:
       password: ((redis_broker_password))
       tls: true
   - name: redis_broker_check
-    release: redis-service
+    release: ((release_name))
 
 variables:
 - name: redis_password
@@ -139,7 +139,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:

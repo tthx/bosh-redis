@@ -12,7 +12,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
@@ -28,17 +28,17 @@ instance_groups:
       replica_password: ((redis_replica_password))
       sentinel_password: ((redis_sentinel_user_password))
   - name: redis_check
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
       sentinel_slave_conn: {from: sentinel_slave}
   - name: redis_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_sentinel_conn: {from: sentinel_master}
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: sentinel_master}
     consumes:
@@ -47,7 +47,7 @@ instance_groups:
       bind: ((redis_bind))
       password: ((redis_sentinel_password))
   - name: redis_sentinel_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_sentinel_conn: {from: sentinel_master}
 - name: sentinel-slave
@@ -60,13 +60,13 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis_sentinel
-    release: redis-service
+    release: ((release_name))
     provides:
       redis_sentinel_conn: {as: sentinel_slave}
     consumes:
       redis_sentinel_conn: {from: sentinel_master}
   - name: redis_sentinel_exporter
-    release: redis-service
+    release: ((release_name))
     consumes:
       redis_sentinel_conn: {from: sentinel_master}
 - name: broker
@@ -79,7 +79,7 @@ instance_groups:
   - name: ((default_network))
   jobs:
   - name: redis_broker-1.5
-    release: redis-service
+    release: ((release_name))
     consumes:
       slave_conn: nil
       redis_sentinel_conn: {from: sentinel_master}
@@ -88,7 +88,7 @@ instance_groups:
       bind: ((redis_bind))
       password: ((redis_broker_password))
   - name: redis_broker_check-1.5
-    release: redis-service
+    release: ((release_name))
 
 variables:
 - name: redis_password
@@ -126,7 +126,7 @@ stemcells:
   version: "((stemcell_version))"
 
 releases:
-- name: redis-service
+- name: ((release_name))
   version: latest
 
 update:
