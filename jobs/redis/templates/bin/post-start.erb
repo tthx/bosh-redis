@@ -6,6 +6,8 @@
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
 ERR=0;
+
+<%- if !sentinel.nil? && master.p('replication') -%>
 CLI="/var/vcap/packages/redis/bin/redis-cli";
 
 REDIS_IP="127.0.0.1";
@@ -30,7 +32,6 @@ TLS_CA_CERT_FILE="${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
 REDIS_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
 <%- end -%>
 
-<%- if !sentinel.nil? && master.p('replication') -%>
 SENTINEL_PORT="<%= sentinel.p('port') %>";
 SENTINEL_CRED="";
 <%- sentinel.if_p('password') do |x|

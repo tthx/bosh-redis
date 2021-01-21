@@ -52,26 +52,15 @@ SENTINEL_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
   master_port=master.p('port')
   if master.p('tls') && master.p('tls_replication')
     master_port=master.p('tls_port')
-  end -%>
-SENTINEL_CMD="SENTINEL MONITOR <%= spec.deployment %> <%= master.instances.find{ |x| x.bootstrap }.address %> <%= master_port %> <%= master.p('max_detected_failures') %>\n";
-<%- master.if_p('sentinel_password') do |x|
-    unless x.to_s.empty? -%>
-SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> AUTH-PASS <%= x %>\n";
-<%- end
-  end -%>
-SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> AUTH-USER <%= master.p('sentinel_user') %>\n";
-SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> DOWN-AFTER-MILLISECONDS <%= master.p('down_after_milliseconds') %>\n";
-SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> PARALLEL-SYNCS <%= master.p('parallel_syncs') %>\n";
-SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> FAILOVER-TIMEOUT <%= master.p('failover_timeout') %>\n";
-
-<%- sentinel_addresses=''
+  end
+  sentinel_addresses=''
   sentinel.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
   if !sentinel_slave.nil?
     sentinel_slave.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
   end -%>
 SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
 
-SENTINEL_TODO="";
+is_monitored=0;
 for x in ${SENTINEL_ADDRESSES};
 do
   MSG="$("${CLI}" \
@@ -81,41 +70,52 @@ do
     SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
   if [[ ${?} -eq 0 ]] && [[ -n "${MSG}" ]];
   then
+    is_monitored=1;
     echo "Sentinel [${x}] already monitor [<%= spec.deployment %>].";
-  else
-    SENTINEL_TODO+="${x} ";
-  fi
-done
-
-SENTINEL_DONE="";
-for x in ${SENTINEL_TODO};
-do
-  MSG="$(echo -e "${SENTINEL_CMD}" | \
-    "${CLI}" \
-      -h "${x}" \
-      -p "${SENTINEL_PORT}" \
-      ${SENTINEL_CRED})";
-  ERR=${?};
-  if [[ ! ${ERR} -eq 0 ]];
-  then
-    echo "ERROR: Commands failed with Sentinel \"${x}\": \"${MSG}\".";
     break;
   fi
-  echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
-  SENTINEL_DONE+="${x} ";
 done
 
-if [[ ! ${ERR} -eq 0 ]];
+if [[ ${is_monitored} -eq 0 ]];
 then
-  for x in ${SENTINEL_DONE};
+  SENTINEL_CMD="SENTINEL MONITOR <%= spec.deployment %> <%= master.instances.find{ |x| x.bootstrap }.address %> <%= master_port %> <%= master.p('max_detected_failures') %>\n";
+  <%- master.if_p('sentinel_password') do |x|
+      unless x.to_s.empty? -%>
+  SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> AUTH-PASS <%= x %>\n";
+  <%- end
+    end -%>
+  SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> AUTH-USER <%= master.p('sentinel_user') %>\n";
+  SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> DOWN-AFTER-MILLISECONDS <%= master.p('down_after_milliseconds') %>\n";
+  SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> PARALLEL-SYNCS <%= master.p('parallel_syncs') %>\n";
+  SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> FAILOVER-TIMEOUT <%= master.p('failover_timeout') %>\n";
+  for x in ${SENTINEL_ADDRESSES};
   do
-    "${CLI}" \
-      -h "${x}" \
-      -p "${SENTINEL_PORT}" \
-      ${SENTINEL_CRED} \
-      SENTINEL REMOVE <%= spec.deployment %>;
-    echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
+    MSG="$(echo -e "${SENTINEL_CMD}" | \
+      "${CLI}" \
+        -h "${x}" \
+        -p "${SENTINEL_PORT}" \
+        ${SENTINEL_CRED})";
+    ERR=${?};
+    if [[ ! ${ERR} -eq 0 ]];
+    then
+      echo "ERROR: Commands failed with Sentinel \"${x}\": \"${MSG}\".";
+      break;
+    fi
+    echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
   done
+
+  if [[ ! ${ERR} -eq 0 ]];
+  then
+    for x in ${SENTINEL_ADDRESSES};
+    do
+      "${CLI}" \
+        -h "${x}" \
+        -p "${SENTINEL_PORT}" \
+        ${SENTINEL_CRED} \
+        SENTINEL REMOVE <%= spec.deployment %>;
+      echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
+    done
+  fi
 fi
 <%- end -%>
 
