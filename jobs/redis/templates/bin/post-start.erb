@@ -1,0 +1,83 @@
+#!/bin/bash
+<%- master=link('redis_conn')
+  if_link('master_conn'){ |x| master=x }
+  sentinel_master=nil
+  if_link('redis_sentinel_conn'){ |x| sentinel_master=x }
+  if_link('sentinel_master_conn'){ |x| sentinel_master=x }
+  sentinel_slave=nil
+  if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
+
+ERR=0;
+
+<%- if !sentinel_master.nil? && master.p('replication') -%>
+CLI="/var/vcap/packages/redis/bin/redis-cli";
+
+REDIS_IP="127.0.0.1";
+<%- if master.p('bind') -%>
+REDIS_IP="<%= spec.ip %>";
+<%- end -%>
+REDIS_PORT="<%= master.p('port') %>";
+REDIS_CRED="";
+<%- master.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+REDIS_CRED=" -a <%= x %>";
+<%- end -%>
+
+SENTINEL_PORT="<%= sentinel_master.p('port') %>";
+SENTINEL_CRED="";
+<%- sentinel_master.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+SENTINEL_CRED="-a <%= x %>";
+<%- end
+  sentinel_addresses=''
+  sentinel_master.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
+  sentinel_instances=sentinel_master.instances.length
+  if !sentinel_slave.nil?
+    sentinel_slave.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
+    sentinel_instances+=sentinel_slave.instances.length
+  end -%>
+SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
+SENTINEL_INSTANCES="<%= sentinel_instances %>";
+i=0;
+is_replica=0;
+for x in ${SENTINEL_ADDRESSES};
+do
+  MSG="$("${CLI}" \
+    -h "${x}" \
+    -p "${SENTINEL_PORT}" \
+    ${SENTINEL_CRED} \
+    SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
+  if [[ ${?} -eq 0 ]] && \
+    [[ -n "${MSG}" ]] && \
+    [[ "${REDIS_IP}" != "$(echo -e "${MSG}"|grep "${REDIS_IP}")" || \
+    "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}")" ]];
+  then
+    is_replica=1;
+    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
+    break;
+  fi
+  ((i++));
+done
+
+if [[ ${i} -lt ${SENTINEL_INSTANCES} ]] && [[ ${is_replica} -eq 1 ]];
+then
+  is_connected=0;
+  while [[ ${is_connected} -eq 0 ]] && [[ ${ERR} -eq 0 ]];
+  do
+    MSG="$("${CLI}" \
+      -h ${REDIS_IP} \
+      -p ${REDIS_PORT} \
+      ${REDIS_CRED} \
+      ROLE)";
+    ERR=${?};
+    if [[ ${ERR} -eq 0 ]] && \
+      [[ "connected" == "$(echo -e "${MSG}"|grep "connected")" ]];
+    then
+      is_connected=1;
+      echo "Redis replica [${REDIS_IP}:${REDIS_PORT}] is connected";
+    fi
+  done
+fi
+<%- end -%>
+
+exit ${ERR};

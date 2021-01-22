@@ -1,3 +1,9 @@
+## redis-orange 1.0.2.2
+- Added post-start to support BOSH recreate and Redis high availability with Redis Sentinel. Your deployment must be serial to support this feature.
+
+## redis-orange 1.0.2.1
+- Correction for misunderstanding about Sentinel's quorum by adding `max_detected_failures` property in Redis's specifications. It's default value is 2.
+
 ## redis-orange 1.0.2
 - Refine Redis memory usage by `maxmemory` property and memory eviction policies.
 - Delay automatic restart to avoid persistence on disk to deal with the issue:
@@ -9,7 +15,6 @@
 - Update [*Open JDK*](https://jdk.java.net/) 13.0.1 -> 13.0.2.
 
 ## redis-orange 1.0.1
-
 Components update:
 - [*Redis*](https://redis.io/) 5.0.5 -> 5.0.7
 - [*OpenJDK*](https://openjdk.java.net/) 12.0.1 -> 13.0.1
