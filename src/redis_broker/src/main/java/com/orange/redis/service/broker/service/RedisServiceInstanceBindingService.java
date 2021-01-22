@@ -17,8 +17,7 @@ import org.springframework.cloud.servicebroker.model.binding.GetServiceInstanceB
 import org.springframework.cloud.servicebroker.service.ServiceInstanceBindingService;
 
 @Service
-public class RedisServiceInstanceBindingService
-    implements ServiceInstanceBindingService {
+public class RedisServiceInstanceBindingService implements ServiceInstanceBindingService {
   private final RedisConfig redisConfig;
 
   public RedisServiceInstanceBindingService(final RedisConfig redisConfig) {
@@ -26,21 +25,19 @@ public class RedisServiceInstanceBindingService
   }
 
   @Override
-  public Mono<CreateServiceInstanceBindingResponse> createServiceInstanceBinding(
-      CreateServiceInstanceBindingRequest request) {
+  public Mono<CreateServiceInstanceBindingResponse>
+      createServiceInstanceBinding(CreateServiceInstanceBindingRequest request) {
     return Mono.just(CreateServiceInstanceAppBindingResponse.builder().build());
   }
 
   @Override
-  public Mono<DeleteServiceInstanceBindingResponse> deleteServiceInstanceBinding(
-      DeleteServiceInstanceBindingRequest request) {
+  public Mono<DeleteServiceInstanceBindingResponse>
+      deleteServiceInstanceBinding(DeleteServiceInstanceBindingRequest request) {
     return Mono.just(DeleteServiceInstanceBindingResponse.builder().build());
   }
 
   @Override
-  public Mono<GetServiceInstanceBindingResponse> getServiceInstanceBinding(
-      GetServiceInstanceBindingRequest request) {
-    return Mono.just(GetServiceInstanceAppBindingResponse.builder()
-        .credentials(redisConfig.toMap()).build());
+  public Mono<GetServiceInstanceBindingResponse> getServiceInstanceBinding(GetServiceInstanceBindingRequest request) {
+    return Mono.just(GetServiceInstanceAppBindingResponse.builder().credentials(redisConfig.toMap()).build());
   }
 }

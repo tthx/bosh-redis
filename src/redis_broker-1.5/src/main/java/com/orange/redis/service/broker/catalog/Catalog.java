@@ -6,8 +6,7 @@ public class Catalog {
 
   private List<Service> services;
 
-  public Catalog() {
-  }
+  public Catalog() {}
 
   public List<Service> getServices() {
     return services;

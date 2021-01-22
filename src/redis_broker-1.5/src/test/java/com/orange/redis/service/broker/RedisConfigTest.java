@@ -25,9 +25,6 @@ public class RedisConfigTest {
     Assert.assertEquals("192.168.56.101 192.168.56.102", servers);
     Assert.assertEquals("6379", redisConfig.getPort().toString());
     Assert.assertEquals("redis_secret", redisConfig.getPassword());
-    Assert.assertEquals("admin", redisConfig.getAdmin_user());
-    Assert.assertEquals("admin_secret", redisConfig.getAdmin_password());
     Assert.assertTrue(redisConfig.getSentinel().isEmpty());
-    Assert.assertTrue(redisConfig.getTls().isEmpty());
   }
 }

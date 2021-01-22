@@ -1,5 +1,4 @@
 ---
 name: redis
 files:
-- common/gen-certs.sh
 - redis/redis-*.tar.gz # From https://redis.io/download
