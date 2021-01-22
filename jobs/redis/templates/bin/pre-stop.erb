@@ -6,7 +6,7 @@
 
 ERR=0;
 
-<%- if !sentinel.nil? && master.p('replication') -%>
+<%- if !sentinel.nil? -%>
 if [[ ${BOSH_DEPLOYMENT_NEXT_STATE} == "delete" ]];
 then
   CLI="/var/vcap/packages/redis/bin/redis-cli";
