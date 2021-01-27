@@ -1,6 +1,7 @@
 ## redis-orange 1.0.3.1
 - Added post-start to support BOSH recreate and Redis high availability with Redis Sentinel. Your deployment must be serial to support this feature.
 - Added pre-stop to remove Redis group from shared Redis Sentinel.
+- Since Redis 6.0.7, directory where is located Redis Sentinel's configuration file must have read-write access for the Redis Sentinel process user.
 - Components update:
   - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
   - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.15.1,
