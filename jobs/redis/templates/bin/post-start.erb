@@ -7,10 +7,8 @@
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
 ERR=0;
-
 <%- if !sentinel.nil? && master.p('replication') -%>
 CLI="/var/vcap/packages/redis/bin/redis-cli";
-
 REDIS_IP="127.0.0.1";
 <%- if master.p('bind') -%>
 REDIS_IP="<%= spec.ip %>";
@@ -41,19 +39,22 @@ i=0;
 is_replica=0;
 for x in ${SENTINEL_ADDRESSES};
 do
-  MSG="$("${CLI}" \
-    -h "${x}" \
-    -p "${SENTINEL_PORT}" \
-    ${SENTINEL_CRED} \
-    SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
-  if [[ ${?} -eq 0 ]] && \
-    [[ -n "${MSG}" ]] && \
-    [[ "${REDIS_IP}" != "$(echo -e "${MSG}"|grep "${REDIS_IP}")" || \
-    "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}")" ]];
+  if [[ "${x}" != "${REDIS_IP}" ]];
   then
-    is_replica=1;
-    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
-    break;
+    MSG="$("${CLI}" \
+      -h "${x}" \
+      -p "${SENTINEL_PORT}" \
+      ${SENTINEL_CRED} \
+      SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
+    if [[ ${?} -eq 0 ]] && \
+      [[ -n "${MSG}" ]] && \
+      [[ "${REDIS_IP}" != "$(echo -e "${MSG}"|grep "${REDIS_IP}")" || \
+      "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}")" ]];
+    then
+      is_replica=1;
+      echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
+      break;
+    fi
   fi
   ((i++));
 done
