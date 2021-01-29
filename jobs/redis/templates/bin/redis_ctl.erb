@@ -14,15 +14,15 @@ STORE_DIR="<%= p('dir') %>";
 PID_FILE="${RUN_DIR}/<%= p('pidfile') %>";
 CONF_DIR="/var/vcap/jobs/redis/config";
 CONF_FILE="${CONF_DIR}/redis.conf";
-REDIS_IP="127.0.0.1";
+IP="127.0.0.1";
 <%- if master.p('bind') -%>
-REDIS_IP="<%= spec.ip %>";
+IP="<%= spec.ip %>";
 <%- end -%>
-REDIS_PORT="<%= master.p('port') %>";
-REDIS_CRED="";
+PORT="<%= master.p('port') %>";
+CRED="";
 <%- master.if_p('password') do |password|
     unless password.to_s.empty? -%>
-REDIS_CRED="-a <%= password %>";
+CRED="-a <%= password %>";
 <%- end
   end -%>
 SHUTDOWN="SHUTDOWN";
@@ -100,9 +100,9 @@ case "${1}" in
       echo "Stopping...";
       exec chpst -u vcap:vcap \
         "${CLI}" \
-          -h "${REDIS_IP}" \
-          -p "${REDIS_PORT}" \
-          ${REDIS_CRED} \
+          -h "${IP}" \
+          -p "${PORT}" \
+          ${CRED} \
           ${SHUTDOWN};
       while [[ -x "/proc/${redis_pid}" ]];
       do

@@ -4,7 +4,7 @@
   slave=link('redis_conn')
   if_link('slave_conn'){ |x| slave=x }
   sentinel=nil
-  if_link('SENTINEL_conn'){ |x| sentinel=x }
+  if_link('redis_sentinel_conn'){ |x| sentinel=x }
   sentinel_slave=nil
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
@@ -16,18 +16,21 @@ REDIS_IP="127.0.0.1";
 REDIS_IP="<%= spec.ip %>";
 <%- end -%>
 REDIS_PORT="<%= master.p('port') %>";
-
-REDIS_PASSWORD="";
+REDIS_CRED="";
 <%- master.if_p('password') do |password|
     unless password.to_s.empty? -%>
-REDIS_PASSWORD="-a <%= password %>";
+REDIS_CRED="-a <%= password %>";
 <%- end
   end -%>
 
 #
 # Look up Redis instance
 #
-MSG="$(${CLI} ${REDIS_PASSWORD} -h ${REDIS_IP} -p ${REDIS_PORT} PING)";
+MSG="$(${CLI} \
+  -h ${REDIS_IP} \
+  -p ${REDIS_PORT} \
+  ${REDIS_CRED} \
+  PING)";
 ERR=${?}
 if [[ ${ERR} -eq 0 ]] && [[ "${MSG}" == "PONG" ]];
 then
@@ -47,64 +50,62 @@ fi
   end -%>
 SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
 SENTINEL_PORT="<%= sentinel.p('port') %>";
-SENTINEL_PASSWORD="";
+SENTINEL_CRED="";
 <%- sentinel.if_p('password') do |password|
     unless password.to_s.empty? -%>
-SENTINEL_PASSWORD="-a <%= password %>";
+SENTINEL_CRED="-a <%= password %>";
 <%- end
   end -%>
 
-SENTINEL_ERROR="";
 for x in ${SENTINEL_ADDRESSES};
 do
   MSG="$(${CLI} \
-    ${SENTINEL_PASSWORD} \
     -h ${x} \
     -p ${SENTINEL_PORT} \
+    ${SENTINEL_CRED} \
     PING)";
   if [[ ${?} -eq 0 ]] && [[ "${MSG}" == "PONG" ]];
   then
-    echo "Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is available: ${MSG}";
+    echo "Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is available: \"${MSG}\".";
     MSG="(${CLI} \
-      ${SENTINEL_PASSWORD} \
       -h ${x} \
       -p ${SENTINEL_PORT} \
+      ${SENTINEL_CRED} \
       SENTINEL master <%= spec.deployment %>)";
     if [[ ${?} -eq 0 ]];
     then
-      echo "Available master for <%= spec.deployment %> : ${MSG}";
+      echo "Available master for <%= spec.deployment %>: \"${MSG}\".";
       MSG="(${CLI} \
-        ${SENTINEL_PASSWORD} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
+        ${SENTINEL_CRED} \
         SENTINEL slaves <%= spec.deployment %>)";
     else
-      echo "ERROR: Unable to find Redis master for <%= spec.deployment %> from Redis Sentinel ${x} : ${MSG}" >&2;
+      ERR=1;
+      echo "ERROR: Unable to find Redis master for <%= spec.deployment %> from Redis Sentinel ${x}: \"${MSG}\"." >&2;
     fi
     if [[ ${?} -eq 0 ]];
     then
-      echo "Available slaves for <%= spec.deployment %> : ${MSG}"
+      echo "Available slaves for <%= spec.deployment %>: \"${MSG}\"."
       MSG="(${CLI} \
-        ${SENTINEL_PASSWORD} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
+        ${SENTINEL_CRED} \
         SENTINEL sentinels <%= spec.deployment %>)";
     else
-      echo "ERROR: Unable to find Redis slaves for <%= spec.deployment %> from Redis Sentinel ${x} : ${MSG}" >&2;
+      ERR=1;
+      echo "ERROR: Unable to find Redis slaves for <%= spec.deployment %> from Redis Sentinel ${x}: \"${MSG}\"." >&2;
     fi
     if [[ ${?} -eq 0 ]];
     then
-      echo "Available sentinels for <%= spec.deployment %> : ${MSG}";
+      echo "Available sentinels for <%= spec.deployment %>: \"${MSG}\".";
     else
-      echo "ERROR: Unable to find Redis Sentinel for <%= spec.deployment %> from Redis Sentinel ${x} : ${MSG}" >&2;
+      ERR=1;
+      echo "ERROR: Unable to find Redis Sentinel for <%= spec.deployment %> from Redis Sentinel ${x}: \"${MSG}\"." >&2;
     fi
   else
-    echo "ERROR: Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is unavailable: ${MSG}" >&2;
-  fi
-  if [[ ${?} -ne 0 ]];
-  then
     ERR=1;
-    SENTINEL_ERROR+="${x} ";
+    echo "ERROR: Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is unavailable: \"${MSG}\"." >&2;
   fi
 done
 <%- end -%>
@@ -112,40 +113,61 @@ done
 #
 # Look up Redis cluster
 #
-CLUSTER_OPTS="";
-<%- if master.p('cluster_enabled').eql?('yes') -%>
-CLUSTER_OPTS="-c";
-<%- addresses=''
-  master.instances.each{ |x| addresses.concat(x.address).concat(' ') }
-  instances=master.instances.length -%>
-MASTER_ADDRESSES="<%= addresses %>";
-MASTER_INSTANCES="<%= instances %>";
-<%- slaves_addresses=''
+CLI_CLUSTER_OPTS="";
+<%- if master.p('cluster_enabled').eql?('yes')
+  master_addresses=''
+  master.instances.each{ |x| master_addresses.concat(x.address).concat(' ') }
+  master_instances=master.instances.length
+  replicas_per_node=master.p('cluster_replicas_per_node').to_i
+  slaves_addresses=''
   slave_instances=0
-  if !slave.instances[0].name.eql?(master.instances[0].name)
-    slave.instances.each{ |x| slaves_addresses.concat(x.address).concat(' ') }
-    slave_instances=slave.instances.length
-  end
-  addresses.concat(slaves_addresses)
-  instances+=slave_instances -%>
+  if !slave.nil?
+    if replicas_per_node>0
+      slave.instances.each{ |x| slaves_addresses.concat(x.address).concat(' ') }
+      slave_instances=slave.instances.length
+    else
+      slave.instances.each{ |x| master_addresses.concat(x.address).concat(' ') }
+      master_instances+=slave.instances.length
+      replicas_per_node=0
+    end
+  elsif replicas_per_node>0
+    if master_instances>replicas_per_node
+      addresses=master_addresses.split
+      master_instances=master_instances.div(replicas_per_node+1)
+      master_addresses=addresses.slice(0..master_instances-1).join(' ')
+      slaves_addresses=addresses.slice(master_instances..-1)
+      slave_instances=slaves_addresses.length
+      slaves_addresses=slaves_addresses.join(' ')
+    else
+      replicas_per_node=0
+    end
+  end -%>
+MASTER_ADDRESSES="<%= master_addresses %>";
+MASTER_INSTANCES="<%= master_instances %>";
 SLAVE_ADDRESSES="<%= slaves_addresses %>";
 SLAVE_INSTANCES="<%= slave_instances %>";
-REDIS_ADDRESSES="<%= addresses %>";
-REDIS_INSTANCES="<%= instances %>";
-SLAVE_PER_INSTANCE="<%= master.p('cluster_replicas_per_node') %>";
+REDIS_ADDRESSES="${MASTER_ADDRESSES} ${SLAVE_ADDRESSES}";
+REDIS_INSTANCES="<%= master_instances+slave_instances %>";
+REPLICAS_PER_NODE="<%= replicas_per_node %>";
 
-CLUSTER_NODES="$(${CLI} \
-  ${REDIS_PASSWORD} \
-  -h ${REDIS_IP} \
-  -p ${REDIS_PORT} \
+echo "Initial masters addresses: [${MASTER_ADDRESSES}]";
+echo "Number of masters: [${MASTER_INSTANCES}]";
+echo "Initial slaves addresses: [${SLAVE_ADDRESSES}]";
+echo "Number of slaves: [${SLAVE_INSTANCES}]";
+echo "Replicas per master: [${REPLICAS_PER_NODE}]";
+
+MSG="$("${CLI}" \
+  -h "${REDIS_IP}" \
+  -p "${REDIS_PORT}" \
+  ${REDIS_CRED} \
   CLUSTER NODES)";
 ERR=${?};
 if [[ ${ERR} -eq 0 ]];
 then
   echo "Redis CLUSTER NODES command results:";
-  echo "${CLUSTER_NODES}";
+  echo "${MSG}";
   AVAILABLE_NODES=0;
-  for i in $(echo "${CLUSTER_NODES}" | awk '{print $2;}');
+  for i in $(echo "${MSG}" | awk '{print $2;}');
   do
     for j in ${REDIS_ADDRESSES};
     do
@@ -157,59 +179,33 @@ then
   done
   if [[ ${REDIS_INSTANCES} -eq ${AVAILABLE_NODES} ]];
   then
-    echo "All requested Redis nodes [${REDIS_INSTANCES}] are available.";
-<%- if !slave.instances[0].name.eql?(master.instances[0].name) -%>
-    MASTER_NODES="$(echo "${CLUSTER_NODES}" | \
-      awk '$3~/master/{print $2;}')";
-    AVAILABLE_NODES=0;
-    for i in ${MASTER_ADDRESSES};
-    do
-      for j in ${MASTER_NODES};
-      do
-        if [[ "${i}:${REDIS_PORT}" == "${j%%@*}" ]];
-        then
-          ((AVAILABLE_NODES++));
-        fi
-      done
-    done
+    echo "All required Redis nodes [${REDIS_INSTANCES}] are available in the cluster.";
+    AVAILABLE_NODES=$(echo "${MSG}" | awk '$3~/master/{print $2;}' | wc -l);
     if [[ ${MASTER_INSTANCES} -eq ${AVAILABLE_NODES} ]];
     then
-      echo "All requested Redis master nodes [${MASTER_INSTANCES}] are available.";
+      echo "All required Redis master nodes [${MASTER_INSTANCES}] are available.";
       ERR=0;
     else
-      echo "WARNING: The requested Redis master nodes [${MASTER_INSTANCES}] is not equal to the initial available master nodes [${AVAILABLE_NODES}]." >&2;
+      echo "ERROR: The required Redis master nodes [${MASTER_INSTANCES}] is not equal to the available master nodes [${AVAILABLE_NODES}]." >&2;
       ERR=1;
     fi
-    SLAVE_NODES="$(echo "${CLUSTER_NODES}" | \
-      awk '$3~/slave/{print $2;}')";
-    AVAILABLE_NODES=0;
-    for i in ${SLAVE_ADDRESSES};
-    do
-      for j in ${SLAVE_NODES};
-      do
-        if [[ "${i}:${REDIS_PORT}" == "${j%%@*}" ]];
-        then
-          ((AVAILABLE_NODES++));
-        fi
-      done
-    done
+    AVAILABLE_NODES=$(echo "${MSG}" | awk '$3~/slave/{print $2;}' | wc -l);
     if [[ ${SLAVE_INSTANCES} -eq ${AVAILABLE_NODES} ]];
     then
-      echo "All requested Redis slave nodes [${SLAVE_INSTANCES}] are available.";
+      echo "All required Redis slave nodes [${SLAVE_INSTANCES}] are available.";
       ERR=0;
     else
-      echo "WARNING: The requested Redis slave nodes [${SLAVE_INSTANCES}] is not equal to the initial available slave nodes [${AVAILABLE_NODES}]." >&2;
+      echo "ERROR: The required Redis slave nodes [${SLAVE_INSTANCES}] is not equal to the available slave nodes [${AVAILABLE_NODES}]." >&2;
       ERR=1;
     fi
-<%- end -%>
   else
-    echo "ERROR: The requested Redis nodes [${REDIS_INSTANCES}] is not equal to the available nodes [${AVAILABLE_NODES}]" >&2;
+    echo "ERROR: The required Redis nodes [${REDIS_INSTANCES}] is not equal to the available nodes [${AVAILABLE_NODES}]." >&2;
     ERR=1;
   fi
 else
-  echo "ERROR: Redis CLUSTER NODES command failed." >&2;
-  ERR=1;
+  echo "ERROR: Redis CLUSTER NODES command failed: \"${MSG}\"." >&2;
 fi
+CLI_CLUSTER_OPTS="-c";
 <%- end -%>
 
 #
@@ -222,54 +218,54 @@ then
   for x in ${SENTINEL_ADDRESSES};
   do
     REDIS_MASTER="$(${CLI} \
-      ${SENTINEL_PASSWORD} \
       -h ${x} \
       -p ${SENTINEL_PORT} \
+      ${SENTINEL_CRED} \
       SENTINEL get-master-addr-by-name <%= spec.deployment %>)";
     REDIS_IP="${REDIS_MASTER%%[[:space:]]*}";
     REDIS_PORT="${REDIS_MASTER#*[[:space:]]}";
     echo "CRUD operations to Redis master [${REDIS_IP}:${REDIS_PORT}] get from Sentinel [${x}] :";
 <%- end -%>
-    CLI_OPTS="${REDIS_PASSWORD} ${CLUSTER_OPTS} -h ${REDIS_IP} -p ${REDIS_PORT}";
+    CLI_OPTS="${REDIS_CRED} ${CLI_CLUSTER_OPTS} -h ${REDIS_IP} -p ${REDIS_PORT}";
     MSG="$(${CLI} ${CLI_OPTS} SET ${KV} ${KV})";
-    ERR=${?};
-    if [[ ${ERR} -eq 0 ]];
+    if [[ ${?} -eq 0 ]];
     then
       echo "Create operation: succeed.";
       MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
-      ERR=${?};
-      if [[ ${ERR} -eq 0 ]] && [[ "${KV}" == "${MSG}" ]];
+      if [[ ${?} -eq 0 ]] && [[ "${KV}" == "${MSG}" ]];
       then
         echo "Read operation: succeed";
         MSG="$(${CLI} ${CLI_OPTS} APPEND ${KV} ${KV})";
-        ERR=${?};
-        if [[ ${ERR} -eq 0 ]];
+        if [[ ${?} -eq 0 ]];
         then
           echo "Append operation: succeed";
           MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
-          ERR=${?};
-          if [[ ${ERR} -eq 0 ]] && [[ "${KV}${KV}" == "${MSG}" ]];
+          if [[ ${?} -eq 0 ]] && [[ "${KV}${KV}" == "${MSG}" ]];
           then
             echo "Update operation: succeed.";
           else
-            echo "ERROR: Update operation: ${MSG}" >&2;
+            ERR=1;
+            echo "ERROR: Update operation: \"${MSG}\"." >&2;
           fi
         else
-          echo "ERROR: Append operation: ${MSG}" >&2;
+          ERR=1;
+          echo "ERROR: Append operation: \"${MSG}\"." >&2;
         fi
       else
-        echo "ERROR: Read operation: ${MSG}" >&2;
+        ERR=1;
+        echo "ERROR: Read operation: \"${MSG}\"." >&2;
       fi
       MSG="$(${CLI} ${CLI_OPTS} DEL ${KV})";
-      ERR=${?};
-      if [[ ${ERR} -eq 0 ]];
+      if [[ ${?} -eq 0 ]];
       then
         echo "Delete operation: succeed.";
       else
-        echo "ERROR: Delete operation: ${MSG}" >&2;
+        ERR=1;
+        echo "ERROR: Delete operation: \"${MSG}\"." >&2;
       fi
     else
-      echo "ERROR: Create operation: ${MSG}" >&2;
+      ERR=1;
+      echo "ERROR: Create operation: \"${MSG}\"." >&2;
     fi
 <%- if master.p('replication') && !sentinel.nil? -%>
   done

@@ -5,8 +5,7 @@ IP="127.0.0.1";
 <%- if broker.p('bind') -%>
 IP="<%= spec.ip %>";
 <%- end -%>
-PORT="<%= broker.p('port') %>";
-BASE_URI="http://<%= broker.p('user') %>:<%= broker.p('password') %>@${IP}:${PORT}";
+BASE_URI="http://<%= broker.p('user') %>:<%= broker.p('password') %>@${IP}:<%= broker.p('port') %>";
 
 ERR_CATALOG=1;
 if [[ "$(curl -s -o /dev/null -I -w "%{http_code}" \
