@@ -12,6 +12,8 @@ PID_FILE="${RUN_DIR}/${PRG_NAME}.pid";
 mkdir -p "${RUN_DIR}" "${LOG_DIR}" "${TMP_DIR}" "${STORE_DIR}";
 chown vcap:vcap "${RUN_DIR}" "${LOG_DIR}" "${TMP_DIR}" "${STORE_DIR}";
 
+export PATH=/var/vcap/packages/${PRG_NAME}/bin:${PATH};
+
 IP="127.0.0.1";
 <% if sentinel.p('bind') %>
 IP="<%= spec.ip %>";
@@ -36,8 +38,6 @@ exec 2>> ${LOG_DIR}/${PRG_NAME}.stderr.log;
 chown vcap:vcap \
   ${LOG_DIR}/${PRG_NAME}.stdout.log \
   ${LOG_DIR}/${PRG_NAME}.stderr.log;
-
-export PATH=/var/vcap/packages/${PRG_NAME}/bin:${PATH};
 
 case $1 in
   start)

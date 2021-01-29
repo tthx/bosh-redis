@@ -1,6 +1,5 @@
 #!/bin/bash
 <%- master=link('redis_conn')
-  if_link('master_conn'){ |x| master=x }
   sentinel=nil
   if_link('redis_sentinel_conn'){ |x| sentinel=x } -%>
   
@@ -12,7 +11,7 @@ LOG_DIR="<%= p('log_dir') %>";
 LOG_FILE="${LOG_DIR}/<%= p('logfile') %>";
 STORE_DIR="<%= p('dir') %>";
 PID_FILE="${RUN_DIR}/<%= p('pidfile') %>";
-CONF_DIR="/var/vcap/jobs/redis/config";
+CONF_DIR="/var/vcap/store/redis/config";
 CONF_FILE="${CONF_DIR}/redis.conf";
 IP="127.0.0.1";
 <%- if master.p('bind') -%>

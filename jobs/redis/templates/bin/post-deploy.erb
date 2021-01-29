@@ -1,6 +1,5 @@
 #!/bin/bash
 <%- master=link('redis_conn')
-  if_link('master_conn'){ |x| master=x }
   slave=link('redis_conn')
   if_link('slave_conn'){ |x| slave=x } -%>
 
@@ -55,14 +54,12 @@ SLAVE_INSTANCES="<%= slave_instances %>";
 REDIS_ADDRESSES="${MASTER_ADDRESSES} ${SLAVE_ADDRESSES}";
 REDIS_INSTANCES="<%= master_instances+slave_instances %>";
 REPLICAS_PER_NODE="<%= replicas_per_node %>";
-NODE_PORT="<%= node_port %>";
 
-echo "Masters addresses: [${MASTER_ADDRESSES}]";
-echo "Number of masters: [${MASTER_INSTANCES}]";
-echo "Slaves addresses: [${SLAVE_ADDRESSES}]";
-echo "Number of slaves: [${SLAVE_INSTANCES}]";
-echo "Replicas per master: [${REPLICAS_PER_NODE}]";
-echo "Nodes port: [${NODE_PORT}]";
+echo "Masters addresses: [${MASTER_ADDRESSES}].";
+echo "Number of masters: [${MASTER_INSTANCES}].";
+echo "Slaves addresses: [${SLAVE_ADDRESSES}].";
+echo "Number of slaves: [${SLAVE_INSTANCES}].";
+echo "Replicas per master: [${REPLICAS_PER_NODE}].";
 
 MSG="$("${CLI}" \
   -h "${REDIS_IP}" \
@@ -79,7 +76,7 @@ then
   do
     for j in ${REDIS_ADDRESSES};
     do
-      if [[ "${i%%@*}" == "${j}:${NODE_PORT}" ]];
+      if [[ "${i%%@*}" == "${j}:${REDIS_PORT}" ]];
       then
         ((AVAILABLE_NODES++));
       fi
@@ -117,7 +114,7 @@ then
   MASTER_NODES="";
   for i in ${MASTER_ADDRESSES};
   do
-    MASTER_NODES+=" ${i}:${NODE_PORT}";
+    MASTER_NODES+=" ${i}:${REDIS_PORT}";
   done
   "${CLI}" \
     ${REDIS_CRED} \
@@ -143,8 +140,8 @@ then
         echo "Associate replica [${l%% *}] to [${i}]";
         "${CLI}" \
           ${REDIS_CRED} \
-          --cluster add-node ${l%% *}:${NODE_PORT} \
-          ${i}:${NODE_PORT} \
+          --cluster add-node ${l%% *}:${REDIS_PORT} \
+          ${i}:${REDIS_PORT} \
           --cluster-slave \
           --cluster-master-id ${MASTER_ID} <<< "yes";
         ERR=${?};
@@ -167,8 +164,8 @@ then
         ERR=${?};
         "${CLI}" \
           ${REDIS_CRED} \
-          --cluster add-node ${l%% *}:${NODE_PORT} \
-          ${i}:${NODE_PORT} \
+          --cluster add-node ${l%% *}:${REDIS_PORT} \
+          ${i}:${REDIS_PORT} \
           --cluster-slave \
           --cluster-master-id ${MASTER_ID} <<< "yes";
         ERR=${?};
@@ -208,7 +205,7 @@ then
       do
         for j in ${REDIS_ADDRESSES};
         do
-          if [[ "${i%%@*}" == "${j}:${NODE_PORT}" ]];
+          if [[ "${i%%@*}" == "${j}:${REDIS_PORT}" ]];
           then
             ((AVAILABLE_NODES++));
           fi
@@ -222,7 +219,7 @@ then
       do
         for j in ${MASTER_ADDRESSES};
         do
-          if [[ "${i%%@*}" == "${j}:${NODE_PORT}" ]];
+          if [[ "${i%%@*}" == "${j}:${REDIS_PORT}" ]];
           then
             ((AVAILABLE_MASTER_NODES++));
           fi
@@ -236,7 +233,7 @@ then
       do
         for j in ${SLAVE_ADDRESSES};
         do
-          if [[ "${i%%@*}" == "${j}:${NODE_PORT}" ]];
+          if [[ "${i%%@*}" == "${j}:${REDIS_PORT}" ]];
           then
             ((AVAILABLE_SLAVE_NODES++));
           fi
@@ -262,7 +259,7 @@ then
     do
       for j in ${REDIS_ADDRESSES};
       do
-        if [[ "${i%%@*}" == "${j}:${NODE_PORT}" ]];
+        if [[ "${i%%@*}" == "${j}:${REDIS_PORT}" ]];
         then
           ((AVAILABLE_NODES++));
         fi

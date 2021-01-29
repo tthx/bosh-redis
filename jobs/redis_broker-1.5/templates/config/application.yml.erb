@@ -1,10 +1,8 @@
 <%- master=link('redis_conn')
-  if_link('master_conn'){ |x| master=x }
   slave=nil
   if_link('slave_conn'){ |x| slave=x }
   sentinel=nil
   if_link('redis_sentinel_conn'){ |x| sentinel=x }
-  if_link('sentinel_master_conn'){ |x| sentinel=x }
   sentinel_slave=nil
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 logging:

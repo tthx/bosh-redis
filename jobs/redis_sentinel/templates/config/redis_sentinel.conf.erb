@@ -1,9 +1,5 @@
 <%- master=link('redis_conn')
-  if_link('master_conn'){ |x| master=x }
-  slave=link('redis_conn')
-  if_link('slave_conn'){ |x| slave=x }
-  sentinel=link('redis_sentinel_conn')
-  if_link('sentinel_master_conn'){ |x| sentinel=x } -%>
+  sentinel=link('redis_sentinel_conn') -%>
 # *** IMPORTANT ***
 #
 # By default Sentinel will not be reachable from interfaces different than

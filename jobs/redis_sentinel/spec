@@ -2,7 +2,7 @@
 name: redis_sentinel
 
 templates:
-  config/redis_sentinel.conf.erb: config/redis_sentinel.conf
+  config/redis_sentinel.conf.erb: /var/vcap/store/redis_sentinel/config/redis_sentinel.conf
   bin/redis_sentinel_ctl.erb: bin/redis_sentinel_ctl
 
 packages:
@@ -24,15 +24,6 @@ consumes:
   type: conn
 - name: redis_sentinel_conn
   type: sentinel_conn
-- name: master_conn
-  type: conn
-  optional: true
-- name: slave_conn
-  type: conn
-  optional: true
-- name: sentinel_master_conn
-  type: sentinel_conn
-  optional: true
 
 properties:
   bind:
