@@ -66,7 +66,7 @@ do
   if [[ ${?} -eq 0 ]] && [[ "${MSG}" == "PONG" ]];
   then
     echo "Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is available: \"${MSG}\".";
-    MSG="(${CLI} \
+    MSG="$(${CLI} \
       -h ${x} \
       -p ${SENTINEL_PORT} \
       ${SENTINEL_CRED} \
@@ -74,7 +74,7 @@ do
     if [[ ${?} -eq 0 ]];
     then
       echo "Available master for <%= spec.deployment %>: \"${MSG}\".";
-      MSG="(${CLI} \
+      MSG="$(${CLI} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
         ${SENTINEL_CRED} \
@@ -86,7 +86,7 @@ do
     if [[ ${?} -eq 0 ]];
     then
       echo "Available slaves for <%= spec.deployment %>: \"${MSG}\"."
-      MSG="(${CLI} \
+      MSG="$(${CLI} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
         ${SENTINEL_CRED} \
