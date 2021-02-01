@@ -15,6 +15,7 @@ provides:
   - bind
   - port
   - password
+  - max_detected_failures
   - down_after_milliseconds
   - parallel_syncs
   - failover_timeout

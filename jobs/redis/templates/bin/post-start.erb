@@ -17,7 +17,8 @@ REDIS_CRED="";
 <%- master.if_p('password') do |x|
     unless x.to_s.empty? -%>
 REDIS_CRED=" -a <%= x %>";
-<%- end -%>
+<%- end
+  end -%>
 
 SENTINEL_PORT="<%= sentinel.p('port') %>";
 SENTINEL_CRED="";
@@ -25,6 +26,7 @@ SENTINEL_CRED="";
     unless x.to_s.empty? -%>
 SENTINEL_CRED="-a <%= x %>";
 <%- end
+  end
   sentinel_addresses=''
   sentinel.instances.each{ |x| sentinel_addresses.concat(x.address).concat(' ') }
   sentinel_instances=sentinel.instances.length

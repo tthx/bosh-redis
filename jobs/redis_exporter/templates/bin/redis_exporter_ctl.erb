@@ -39,6 +39,15 @@ ARGS+=" -check-keys <%= x %>";
 <%- if_p('check_single_keys') do |x| -%>
 ARGS+=" -check-single-keys <%= x %>";
 <%- end -%>
+<%- if_p('check_streams') do |x| -%>
+ARGS+=" -check-streams <%= x %>";
+<%- end -%>
+<%- if_p('check_single_streams') do |x| -%>
+ARGS+=" -check-single-streams <%= x %>";
+<%- end -%>
+<%- if_p('config_command') do |x| -%>
+ARGS+=" -config-command <%= x %>";
+<%- end -%>
 <%- if p('debug') -%>
 ARGS+=" -debug";
 <%- end -%>
@@ -57,9 +66,6 @@ ARGS+=" -ping-on-connect";
 <%- if p('redis_only_metrics') -%>
 ARGS+=" -redis-only-metrics";
 <%- end -%>
-<%- if_p('script') do |x| %>
-ARGS+=" -script <%= x %>";
-<%- end %> \
 <%- if p('set_client_name') -%>
 ARGS+=" -set-client-name";
 <%- end -%>
