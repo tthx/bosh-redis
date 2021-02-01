@@ -31,8 +31,8 @@ ARGS+=" -redis.password ${CRED}";
 ARGS+=" -log-format <%= p('log_format') %>";
 ARGS+=" -connection-timeout <%= p('connection_timeout') %>";
 ARGS+=" -namespace <%= p('namespace') %>";
-ARGS+=" -web.listen-address <%= spec.ip + ':' + p('web.port') %>";
-ARGS+=" -web.telemetry-path <%= p('web.telemetry_path') %>";
+ARGS+=" -web.listen-address <%= spec.ip + ':' + p('web_port') %>";
+ARGS+=" -web.telemetry-path <%= p('web_telemetry_path') %>";
 <%- if_p('check_keys') do |x| -%>
 ARGS+=" -check-keys <%= x %>";
 <%- end -%>
