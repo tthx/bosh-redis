@@ -15,9 +15,9 @@ chown vcap:vcap "${RUN_DIR}" "${LOG_DIR}" "${TMP_DIR}" "${STORE_DIR}";
 export PATH=/var/vcap/packages/${PRG_NAME}/bin:${PATH};
 
 IP="127.0.0.1";
-<% if sentinel.p('bind') %>
+<%- if sentinel.p('bind') -%>
 IP="<%= spec.ip %>";
-<% end %>
+<%- end -%>
 ARGS="-sentinel.addr redis://${IP}:<%= sentinel.p('port') %>";
 <%- sentinel.if_p('password') do |x|
     unless x.to_s.empty? -%>
@@ -27,10 +27,10 @@ ARGS+=" -sentinel.password <%= x %>";
 <%- if p('debug') -%>
 ARGS+=" -debug";
 <%- end -%>
-ARGS+=" -log-format="<%= p('log_format') %>";
-ARGS+=" -namespace="<%= p('namespace') %>";
-ARGS+=" -web.listen-address="<%= spec.ip + ':' + p('web.port') %>";
-ARGS+=" -web.telemetry-path="<%= p('web.telemetry_path') %>";
+ARGS+=" -log-format <%= p('log_format') %>";
+ARGS+=" -namespace <%= p('namespace') %>";
+ARGS+=" -web.listen-address <%= spec.ip + ':' + p('web.port') %>";
+ARGS+=" -web.telemetry-path <%= p('web.telemetry_path') %>";
 
 source /var/vcap/packages/${PRG_NAME}/bin/utils.sh;
 exec 1>> ${LOG_DIR}/${PRG_NAME}.stdout.log;
