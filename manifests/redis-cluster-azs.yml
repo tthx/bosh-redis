@@ -6,8 +6,7 @@ instance_groups:
   azs: [((default_az))]
   instances: ((master_node_count))
   vm_type: ((default_vm_type))
-  stemcell: default
-  persistent_disk: ((persistent_disk_size))
+  stemcell: 
   networks:
   - name: ((default_network))
   jobs:
@@ -53,7 +52,6 @@ instance_groups:
   instances: ((slave_node_count))
   vm_type: ((default_vm_type))
   stemcell: default
-  persistent_disk: ((persistent_disk_size))
   networks:
   - name: ((default_network))
   jobs:
