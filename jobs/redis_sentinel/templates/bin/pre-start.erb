@@ -1,0 +1,18 @@
+#!/bin/bash
+
+STORE_DIR="<%= p('dir') %>";
+CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
+CONF_FILE_NAME="redis_sentinel.conf";
+CONF_FILE="${CONF_DIR}/${CONF_FILE_NAME}";
+
+ERR=0
+if [[ -f "${STORE_DIR}/config/${CONF_FILE_NAME}" ]];
+then
+  if [[ $(cp -f "${STORE_DIR}/config/${CONF_FILE_NAME}" "${CONF_DIR}/.") -ne 0 ]];
+  then
+    ERR=1;
+    echo "ERROR: Unable to copy ${STORE_DIR}/config/${CONF_FILE_NAME} to ${CONF_DIR}/." >&2;
+  fi
+fi
+
+exit ${ERR};

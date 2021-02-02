@@ -1,0 +1,44 @@
+#!/bin/bash
+<%- sentinel=link('redis_sentinel_conn') -%>
+
+CLI="/var/vcap/packages/redis/bin/redis-cli";
+LOG_DIR="<%= p('log_dir') %>";
+LOG_FILE="${LOG_DIR}/<%= p('logfile') %>";
+STORE_DIR="<%= p('dir') %>";
+CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
+CONF_FILE_NAME="redis_sentinel.conf";
+CONF_FILE="${CONF_DIR}/${CONF_FILE_NAME}";
+IP="127.0.0.1";
+<%- if sentinel.p('bind') -%>
+IP="<%= spec.ip %>";
+<%- end -%>
+PORT="<%= sentinel.p('port') %>";
+CRED="";
+<%- sentinel.if_p('password') do |password|
+    unless password.to_s.empty? -%>
+CRED="-a <%= password %>";
+<%- end
+  end -%>
+
+ERR=0
+if [[ "${BOSH_DEPLOYMENT_NEXT_STATE}" == "delete" ]];
+then
+  rm -f "${STORE_DIR}/config/${CONF_FILE_NAME}";
+else
+  MSG="$("${CLI}" \
+    -h "${IP}" \
+    -p "${PORT}" \
+    ${CRED} \
+    SENTINEL FLUSHCONFIG)";
+  if [[ ${?} -eq 0 ]];
+  then
+    if [[ $(mkdir -p "${STORE_DIR}/config") -ne 0 ]] || \
+      [[ $(cp -f "${CONF_FILE}" "${STORE_DIR}/config/.") -ne 0 ]];
+    then
+      ERR=1;
+      echo "ERROR: Unable to copy ${CONF_FILE} to ${STORE_DIR}/config/.${STORE_DIR}/config" >&2;
+    fi
+  fi
+fi
+
+exit ${ERR};

@@ -3,7 +3,9 @@ name: redis_sentinel
 
 templates:
   config/redis_sentinel.conf.erb: config/redis_sentinel.conf
+  bin/pre-start.erb: bin/pre-start
   bin/redis_sentinel_ctl.erb: bin/redis_sentinel_ctl
+  bin/pre-stop.erb: bin/pre-stop
 
 packages:
 - redis
