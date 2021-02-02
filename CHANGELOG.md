@@ -2,6 +2,7 @@
 - Added:
   - post-start in Redis job,
   - pre-start and pre-stop to Redis Sentinel job
+  
   to support BOSH recreate and Redis high availability with Redis Sentinel. Your deployment must be serial to support this feature.
 - Components update:
   - [*Redis*](https://redis.io/) 5.0.7 -> 5.0.10
