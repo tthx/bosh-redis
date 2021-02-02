@@ -2,6 +2,8 @@
 - Added post-start to support BOSH recreate and Redis high availability with Redis Sentinel. Your deployment must be serial to support this feature.
 - Components update:
   - [*Redis*](https://redis.io/) 5.0.7 -> 5.0.10
+  - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.3.5 -> 1.16.0
+  - [*redis_sentinel_exporter*](https://github.com/leominov/redis_sentinel_exporter) 1.3.0 -> 1.7.1
 
 ## redis-orange 1.0.2.1
 - Correction for misunderstanding about Sentinel's quorum by adding `max_detected_failures` property in Redis's specifications. It's default value is 2.
