@@ -11,7 +11,6 @@ STORE_DIR="<%= p('dir') %>";
 PID_FILE="${RUN_DIR}/<%= p('pidfile') %>";
 CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
 CONF_FILE="${CONF_DIR}/redis_sentinel.conf";
-
 IP="127.0.0.1";
 <%- if sentinel.p('bind') -%>
 IP="<%= spec.ip %>";
@@ -46,7 +45,7 @@ case "${1}" in
     chmod 750 "${STORE_DIR}";
     touch "${LOG_FILE}";
     chown vcap:vcap "${LOG_FILE}";
-    chmod 770 "${CONF_DIR}"; # Needed for Redis > 6.0.7
+    chmod 770 "${CONF_DIR}";
     chmod 660 "${CONF_FILE}";
 
     # Remove temp backup files that might be left over because of a

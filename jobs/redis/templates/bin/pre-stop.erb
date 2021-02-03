@@ -10,7 +10,6 @@ ERR=0;
 if [[ ${BOSH_DEPLOYMENT_NEXT_STATE} == "delete" ]];
 then
   CLI="/var/vcap/packages/redis/bin/redis-cli";
-
   SENTINEL_PORT="<%= sentinel.p('port') %>";
   SENTINEL_CRED="";
   <%- sentinel.if_p('password') do |x|

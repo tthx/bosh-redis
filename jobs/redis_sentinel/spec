@@ -7,6 +7,7 @@ templates:
   keys/ca.key.erb: keys/ca.key
   bin/pre-start.erb: bin/pre-start
   bin/redis_sentinel_ctl.erb: bin/redis_sentinel_ctl
+  bin/pre-stop.erb: bin/pre-stop
 
 packages:
 - redis

@@ -9,7 +9,6 @@
 
 ERR=0;
 CLI="/var/vcap/packages/redis/bin/redis-cli";
-
 REDIS_IP="127.0.0.1";
 <%- if master.p('bind') -%>
 REDIS_IP="<%= spec.ip %>";
@@ -60,7 +59,7 @@ SENTINEL_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
   end -%>
 SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
 
-is_monitored=0;
+SENTINEL_TODO="";
 for x in ${SENTINEL_ADDRESSES};
 do
   MSG="$("${CLI}" \
@@ -68,15 +67,13 @@ do
     -p "${SENTINEL_PORT}" \
     ${SENTINEL_CRED} \
     SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
-  if [[ ${?} -eq 0 ]] && [[ -n "${MSG}" ]];
+  if [[ ${?} -eq 0 ]] && [[ -z "${MSG}" ]];
   then
-    is_monitored=1;
-    echo "Sentinel [${x}] already monitor [<%= spec.deployment %>].";
-    break;
+    SENTINEL_TODO+=" ${x}";
   fi
 done
 
-if [[ ${is_monitored} -eq 0 ]];
+if [[ -n "${SENTINEL_TODO}" ]];
 then
   SENTINEL_CMD="SENTINEL MONITOR <%= spec.deployment %> <%= master.instances.find{ |x| x.bootstrap }.address %> <%= master_port %> <%= master.p('max_detected_failures') %>\n";
   <%- master.if_p('sentinel_password') do |x|
@@ -88,7 +85,7 @@ then
   SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> DOWN-AFTER-MILLISECONDS <%= master.p('down_after_milliseconds') %>\n";
   SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> PARALLEL-SYNCS <%= master.p('parallel_syncs') %>\n";
   SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> FAILOVER-TIMEOUT <%= master.p('failover_timeout') %>\n";
-  for x in ${SENTINEL_ADDRESSES};
+  for x in ${SENTINEL_TODO};
   do
     MSG="$(echo -e "${SENTINEL_CMD}" | \
       "${CLI}" \
@@ -103,19 +100,6 @@ then
     fi
     echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
   done
-
-  if [[ ! ${ERR} -eq 0 ]];
-  then
-    for x in ${SENTINEL_ADDRESSES};
-    do
-      "${CLI}" \
-        -h "${x}" \
-        -p "${SENTINEL_PORT}" \
-        ${SENTINEL_CRED} \
-        SENTINEL REMOVE <%= spec.deployment %>;
-      echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
-    done
-  fi
 fi
 <%- end -%>
 
