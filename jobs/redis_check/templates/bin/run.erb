@@ -9,7 +9,6 @@
 
 ERR=0;
 CLI="/var/vcap/packages/redis/bin/redis-cli";
-
 REDIS_IP="127.0.0.1";
 <%- if master.p('bind') -%>
 REDIS_IP="<%= spec.ip %>";
@@ -33,7 +32,7 @@ MSG="$(${CLI} \
 ERR=${?}
 if [[ ${ERR} -eq 0 ]] && [[ "${MSG}" == "PONG" ]];
 then
-  echo "#### Redis server at address [${REDIS_IP}] and port [${REDIS_PORT}] is available: \"${MSG}\".";
+  echo -e "####\n#### Redis server at address [${REDIS_IP}] and port [${REDIS_PORT}] is available: \"${MSG}\".";
 else
   echo "ERROR: Redis server at address [${REDIS_IP}] and port [${REDIS_PORT}] is unavailable: \"${MSG}\"." >&2;
 fi
@@ -65,7 +64,7 @@ do
     PING)";
   if [[ ${?} -eq 0 ]] && [[ "${MSG}" == "PONG" ]];
   then
-    echo "#### Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is available: \"${MSG}\".";
+    echo -e "####\n#### Redis Sentinel at address [${x}] and port [${SENTINEL_PORT}] is available: \"${MSG}\".";
     MSG="$(${CLI} \
       -h ${x} \
       -p ${SENTINEL_PORT} \
@@ -73,7 +72,7 @@ do
       SENTINEL master <%= spec.deployment %>)";
     if [[ ${?} -eq 0 ]];
     then
-      echo "#### Available master for <%= spec.deployment %>: \"${MSG}\".";
+      echo -e "####\n#### Available master for <%= spec.deployment %>: \"${MSG}\".";
       MSG="$(${CLI} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
@@ -85,7 +84,7 @@ do
     fi
     if [[ ${?} -eq 0 ]];
     then
-      echo "#### Available slaves for <%= spec.deployment %>: \"${MSG}\"."
+      echo -e "####\n#### Available slaves for <%= spec.deployment %>: \"${MSG}\"."
       MSG="$(${CLI} \
         -h ${x} \
         -p ${SENTINEL_PORT} \
@@ -97,7 +96,7 @@ do
     fi
     if [[ ${?} -eq 0 ]];
     then
-      echo "#### Available sentinels for <%= spec.deployment %>: \"${MSG}\".";
+      echo -e "####\n#### Available sentinels for <%= spec.deployment %>: \"${MSG}\".";
     else
       ERR=1;
       echo "ERROR: Unable to find Redis Sentinel for <%= spec.deployment %> from Redis Sentinel ${x}: \"${MSG}\"." >&2;
@@ -211,7 +210,7 @@ CLI_CLUSTER_OPTS="-c";
 #
 if [[ ${ERR} -eq 0 ]];
 then
-  KV="<%= spec.deployment+'_'+link('redis_conn').instances[spec.index].name+'_'+spec.index.to_s %>";
+  KV="<%= spec.deployment+'_'+spec.name+'_'+spec.address.to_s %>";
 <%- if master.p('replication') && !sentinel.nil? -%>
   for x in ${SENTINEL_ADDRESSES};
   do
@@ -222,7 +221,7 @@ then
       SENTINEL get-master-addr-by-name <%= spec.deployment %>)";
     REDIS_IP="${REDIS_MASTER%%[[:space:]]*}";
     REDIS_PORT="${REDIS_MASTER#*[[:space:]]}";
-    echo "#### CRUD operations to Redis master [${REDIS_IP}:${REDIS_PORT}] get from Sentinel [${x}] :";
+    echo -e "####\n#### CRUD operations to Redis master [${REDIS_IP}:${REDIS_PORT}] get from Sentinel [${x}] :";
 <%- end -%>
     CLI_OPTS="${REDIS_CRED} ${CLI_CLUSTER_OPTS} -h ${REDIS_IP} -p ${REDIS_PORT}";
     MSG="$(${CLI} ${CLI_OPTS} SET ${KV} ${KV})";

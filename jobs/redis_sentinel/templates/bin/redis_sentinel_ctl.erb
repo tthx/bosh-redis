@@ -17,12 +17,11 @@ IP="<%= spec.ip %>";
 <%- end -%>
 PORT="<%= sentinel.p('port') %>";
 CRED="";
-<%- sentinel.if_p('password') do |password|
-    unless password.to_s.empty? -%>
-CRED="-a <%= password %>";
+<%- sentinel.if_p('password') do |x|
+    unless x.to_s.empty? -%>
+CRED="-a <%= x %>";
 <%- end
   end -%>
-SHUTDOWN="SHUTDOWN";
 
 case "${1}" in
   start)
@@ -69,7 +68,7 @@ case "${1}" in
           -h "${IP}" \
           -p "${PORT}" \
           ${CRED} \
-          ${SHUTDOWN};
+          SHUTDOWN;
       while [[ -x "/proc/${pid}" ]];
       do
         echo "Waiting for Redis Sentinel to shutdown ...";
