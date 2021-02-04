@@ -214,57 +214,63 @@ then
 <%- if master.p('replication') && !sentinel.nil? -%>
   for x in ${SENTINEL_ADDRESSES};
   do
-    REDIS_MASTER="$(${CLI} \
+    MSG="$(${CLI} \
       -h ${x} \
       -p ${SENTINEL_PORT} \
       ${SENTINEL_CRED} \
       SENTINEL get-master-addr-by-name <%= spec.deployment %>)";
-    REDIS_IP="${REDIS_MASTER%%[[:space:]]*}";
-    REDIS_PORT="${REDIS_MASTER#*[[:space:]]}";
-    echo -e "####\n#### CRUD operations to Redis master [${REDIS_IP}:${REDIS_PORT}] get from Sentinel [${x}] :";
-<%- end -%>
-    CLI_OPTS="${REDIS_CRED} ${CLI_CLUSTER_OPTS} -h ${REDIS_IP} -p ${REDIS_PORT}";
-    MSG="$(${CLI} ${CLI_OPTS} SET ${KV} ${KV})";
-    if [[ ${?} -eq 0 ]];
+    if [[ ${?} -ne 0 ]] || [[ -z "${MSG}" ]];
     then
-      echo "Create operation: succeed.";
-      MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
-      if [[ ${?} -eq 0 ]] && [[ "${KV}" == "${MSG}" ]];
+      ERR=1;
+      echo "ERROR: Unable to get Redis master from Sentinel [${x}]: \"${MSG}\"." >&2;
+    else
+      REDIS_IP="${MSG%%[[:space:]]*}";
+      REDIS_PORT="${MSG#*[[:space:]]}";
+      echo -e "####\n#### CRUD operations to Redis master [${REDIS_IP}:${REDIS_PORT}] get from Sentinel [${x}] :";
+<%- end -%>
+      CLI_OPTS="${REDIS_CRED} ${CLI_CLUSTER_OPTS} -h ${REDIS_IP} -p ${REDIS_PORT}";
+      MSG="$(${CLI} ${CLI_OPTS} SET ${KV} ${KV})";
+      if [[ ${?} -eq 0 ]];
       then
-        echo "Read operation: succeed";
-        MSG="$(${CLI} ${CLI_OPTS} APPEND ${KV} ${KV})";
-        if [[ ${?} -eq 0 ]];
+        echo "Create operation: succeed.";
+        MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
+        if [[ ${?} -eq 0 ]] && [[ "${KV}" == "${MSG}" ]];
         then
-          echo "Append operation: succeed";
-          MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
-          if [[ ${?} -eq 0 ]] && [[ "${KV}${KV}" == "${MSG}" ]];
+          echo "Read operation: succeed";
+          MSG="$(${CLI} ${CLI_OPTS} APPEND ${KV} ${KV})";
+          if [[ ${?} -eq 0 ]];
           then
-            echo "Update operation: succeed.";
+            echo "Append operation: succeed";
+            MSG="$(${CLI} ${CLI_OPTS} GET ${KV})";
+            if [[ ${?} -eq 0 ]] && [[ "${KV}${KV}" == "${MSG}" ]];
+            then
+              echo "Update operation: succeed.";
+            else
+              ERR=1;
+              echo "ERROR: Update operation: \"${MSG}\"." >&2;
+            fi
           else
             ERR=1;
-            echo "ERROR: Update operation: \"${MSG}\"." >&2;
+            echo "ERROR: Append operation: \"${MSG}\"." >&2;
           fi
         else
           ERR=1;
-          echo "ERROR: Append operation: \"${MSG}\"." >&2;
+          echo "ERROR: Read operation: \"${MSG}\"." >&2;
+        fi
+        MSG="$(${CLI} ${CLI_OPTS} DEL ${KV})";
+        if [[ ${?} -eq 0 ]];
+        then
+          echo "Delete operation: succeed.";
+        else
+          ERR=1;
+          echo "ERROR: Delete operation: \"${MSG}\"." >&2;
         fi
       else
         ERR=1;
-        echo "ERROR: Read operation: \"${MSG}\"." >&2;
+        echo "ERROR: Create operation: \"${MSG}\"." >&2;
       fi
-      MSG="$(${CLI} ${CLI_OPTS} DEL ${KV})";
-      if [[ ${?} -eq 0 ]];
-      then
-        echo "Delete operation: succeed.";
-      else
-        ERR=1;
-        echo "ERROR: Delete operation: \"${MSG}\"." >&2;
-      fi
-    else
-      ERR=1;
-      echo "ERROR: Create operation: \"${MSG}\"." >&2;
-    fi
 <%- if master.p('replication') && !sentinel.nil? -%>
+    fi
   done
 <%- end -%>
 fi
