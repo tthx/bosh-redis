@@ -32,12 +32,18 @@ then
 
   for x in ${SENTINEL_ADDRESSES};
   do
-    "${CLI}" \
+    MSG="$("${CLI}" \
       -h "${x}" \
       -p "${SENTINEL_PORT}" \
       ${SENTINEL_CRED} \
-      SENTINEL REMOVE <%= spec.deployment %>;
-    echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
+      SENTINEL REMOVE <%= spec.deployment %>)";
+    if [[ ${?} -eq 0 ]];
+    then
+      echo "Sentinel [${x}] removed [<%= spec.deployment %>] from monitor.";
+    else
+      ERR=1;
+      echo "ERROR: Unable to removed [<%= spec.deployment %>] from Sentinel [${x}]: \"${MSG}\"." >&2;
+    fi
   done
 fi
 <%- end -%>

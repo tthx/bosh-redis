@@ -60,6 +60,8 @@ SENTINEL_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
 SENTINEL_ADDRESSES="<%= sentinel_addresses %>";
 
 SENTINEL_TODO="";
+MASTER_IP="<%= master.instances.find{ |x| x.bootstrap }.address %>";
+MASTER_PORT="<%= master_port %>";
 for x in ${SENTINEL_ADDRESSES};
 do
   MSG="$("${CLI}" \
@@ -67,15 +69,24 @@ do
     -p "${SENTINEL_PORT}" \
     ${SENTINEL_CRED} \
     SENTINEL GET-MASTER-ADDR-BY-NAME <%= spec.deployment %>)";
-  if [[ ${?} -eq 0 ]] && [[ -z "${MSG}" ]];
+  if [[ ${?} -eq 0 ]];
   then
-    SENTINEL_TODO+=" ${x}";
+    if [[ -z "${MSG}" ]];
+    then
+      SENTINEL_TODO+=" ${x}";
+    else
+      MASTER_IP="${MSG%%[[:space:]]*}";
+      MASTER_PORT="${MSG#*[[:space:]]}";
+    fi
+  else
+    ERR=1;
+    echo "ERROR: Unable to get Redis master from Sentinel [${x}]: \"${MSG}\"." >&2;
   fi
 done
 
 if [[ -n "${SENTINEL_TODO}" ]];
 then
-  SENTINEL_CMD="SENTINEL MONITOR <%= spec.deployment %> <%= master.instances.find{ |x| x.bootstrap }.address %> <%= master_port %> <%= master.p('max_detected_failures') %>\n";
+  SENTINEL_CMD="SENTINEL MONITOR <%= spec.deployment %> ${MASTER_IP} ${MASTER_PORT} <%= master.p('max_detected_failures') %>\n";
   <%- master.if_p('sentinel_password') do |x|
       unless x.to_s.empty? -%>
   SENTINEL_CMD+="SENTINEL SET <%= spec.deployment %> AUTH-PASS <%= x %>\n";
@@ -92,13 +103,13 @@ then
         -h "${x}" \
         -p "${SENTINEL_PORT}" \
         ${SENTINEL_CRED})";
-    ERR=${?};
-    if [[ ! ${ERR} -eq 0 ]];
+    if [[ ${?} -eq 0 ]];
     then
-      echo "ERROR: Commands failed with Sentinel \"${x}\": \"${MSG}\".";
-      break;
+      echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
+    else
+      ERR=1;
+      echo "ERROR: Commands failed to add [<%= spec.deployment %>] to Sentinel [${x}]: \"${MSG}\"." >&2;
     fi
-    echo "Sentinel [${x}] added [<%= spec.deployment %>] to monitor.";
   done
 fi
 <%- end -%>
