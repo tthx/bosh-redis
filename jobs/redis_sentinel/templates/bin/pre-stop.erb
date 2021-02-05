@@ -1,13 +1,8 @@
 #!/bin/bash
 <%- sentinel=link('redis_sentinel_conn') -%>
 
+ERR=0
 CLI="/var/vcap/packages/redis/bin/redis-cli";
-LOG_DIR="<%= p('log_dir') %>";
-LOG_FILE="${LOG_DIR}/<%= p('logfile') %>";
-STORE_DIR="<%= p('dir') %>";
-CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
-CONF_FILE_NAME="redis_sentinel.conf";
-CONF_FILE="${CONF_DIR}/${CONF_FILE_NAME}";
 IP="127.0.0.1";
 <%- if sentinel.p('bind') -%>
 IP="<%= spec.ip %>";
@@ -26,8 +21,9 @@ CRED+=" --tls --cert ${TLS_KEYS_DIR}/<%= p('tls_cert_file') %>";
 CRED+=" --key ${TLS_KEYS_DIR}/<%= p('tls_key_file') %>";
 CRED+=" --cacert ${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
 <%- end -%>
-
-ERR=0
+STORE_DIR="<%= p('store_dir') %>";
+CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
+CONF_FILE_NAME="redis_sentinel.conf";
 if [[ "${BOSH_DEPLOYMENT_NEXT_STATE}" == "delete" ]];
 then
   rm -f "${STORE_DIR}/config/${CONF_FILE_NAME}";
@@ -40,14 +36,13 @@ else
   if [[ ${?} -eq 0 ]];
   then
     if [[ $(mkdir -p "${STORE_DIR}/config") -ne 0 ]] || \
-      [[ $(cp -f "${CONF_FILE}" "${STORE_DIR}/config/.") -ne 0 ]];
+      [[ $(cp -f "${CONF_DIR}/${CONF_FILE_NAME}" "${STORE_DIR}/config/.") -ne 0 ]];
     then
       ERR=1;
-      echo "ERROR: Unable to copy ${CONF_FILE} to ${STORE_DIR}/config/." >&2;
+      echo "ERROR: Unable to copy ${CONF_DIR}/${CONF_FILE_NAME} to ${STORE_DIR}/config/." >&2;
     else
-      echo "Redis Sentinel configuration ${CONF_FILE} is backuped in ${STORE_DIR}/config/.";
+      echo "Redis Sentinel configuration ${CONF_DIR}/${CONF_FILE_NAME} is backuped in ${STORE_DIR}/config/.";
     fi
   fi
 fi
-
 exit ${ERR};
