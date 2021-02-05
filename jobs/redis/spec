@@ -3,8 +3,10 @@ name: redis
 
 templates:
   config/redis.conf.erb: config/redis.conf
+  bin/pre-start.erb: bin/pre-start
   bin/redis_ctl.erb: bin/redis_ctl
   bin/post-start.erb: bin/post-start
+  bin/pre-stop.erb: bin/pre-stop
   bin/post-deploy.erb: bin/post-deploy
 
 packages:

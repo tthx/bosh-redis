@@ -11,6 +11,14 @@ REDIS_IP="127.0.0.1";
 REDIS_IP="<%= spec.ip %>";
 <%- end -%>
 REDIS_PORT="<%= master.p('port') %>";
+
+NODE_CONF_FILE="<%= p('run_dir')+'/nodes-'+master.p('port')+'.conf' %>";
+if [[ -f "${NODE_CONF_FILE}" ]];
+then
+  echo "Redis node [${REDIS_IP}:${REDIS_PORT}] is already configured  in a cluster.";
+  exit 0;
+fi
+
 REDIS_CRED="";
 <%- master.if_p('password') do |password|
     unless password.to_s.empty? -%>
