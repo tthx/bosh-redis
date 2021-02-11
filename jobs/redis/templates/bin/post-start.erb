@@ -83,11 +83,11 @@ done
 
 if [[ ${i} -lt ${SENTINEL_INSTANCES} ]] && [[ ${is_replica} -eq 1 ]];
 then
-  $(wait_replica_sync);
+  wait_replica_sync;
 fi
 <%- end
   if master.p('cluster_enabled').eql?('yes') -%>
-$(wait_replica_sync);
+wait_replica_sync;
 <%- end -%>
 
 exit ${ERR};
