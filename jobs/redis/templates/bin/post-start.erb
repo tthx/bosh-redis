@@ -5,9 +5,29 @@
   sentinel_slave=nil
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
+function wait_replica_sync {
+  local is_connected=0;
+  while [[ ${is_connected} -eq 0 ]] && [[ ${ERR} -eq 0 ]];
+  do
+    sleep "${DEPLAY}";
+    MSG="$("${CLI}" \
+      -h ${REDIS_IP} \
+      -p ${REDIS_PORT} \
+      ${REDIS_CRED} \
+      ROLE)";
+    ERR=${?};
+    if [[ ${ERR} -eq 0 ]] && \
+      [[ "slave" == "$(echo -e "${MSG}"|grep "slave")" ]] && \
+      [[ "connected" == "$(echo -e "${MSG}"|grep "connected")" ]];
+    then
+      is_connected=1;
+      echo "Redis replica [${REDIS_IP}:${REDIS_PORT}] is connected";
+    fi
+  done
+}
+
 ERR=0;
 DEPLAY="1";
-<%- if !sentinel.nil? && master.p('replication') -%>
 CLI="/var/vcap/packages/redis/bin/redis-cli";
 REDIS_IP="127.0.0.1";
 <%- if master.p('bind') -%>
@@ -19,8 +39,8 @@ REDIS_CRED="";
     unless x.to_s.empty? -%>
 REDIS_CRED=" -a <%= x %>";
 <%- end
-  end -%>
-
+  end
+  if !sentinel.nil? && master.p('replication') -%>
 SENTINEL_PORT="<%= sentinel.p('port') %>";
 SENTINEL_CRED="";
 <%- sentinel.if_p('password') do |x|
@@ -63,24 +83,11 @@ done
 
 if [[ ${i} -lt ${SENTINEL_INSTANCES} ]] && [[ ${is_replica} -eq 1 ]];
 then
-  is_connected=0;
-  while [[ ${is_connected} -eq 0 ]] && [[ ${ERR} -eq 0 ]];
-  do
-    sleep "${DEPLAY}";
-    MSG="$("${CLI}" \
-      -h ${REDIS_IP} \
-      -p ${REDIS_PORT} \
-      ${REDIS_CRED} \
-      ROLE)";
-    ERR=${?};
-    if [[ ${ERR} -eq 0 ]] && \
-      [[ "connected" == "$(echo -e "${MSG}"|grep "connected")" ]];
-    then
-      is_connected=1;
-      echo "Redis replica [${REDIS_IP}:${REDIS_PORT}] is connected";
-    fi
-  done
+  $(wait_replica_sync);
 fi
+<%- end
+  if master.p('cluster_enabled').eql?('yes') -%>
+$(wait_replica_sync);
 <%- end -%>
 
 exit ${ERR};
