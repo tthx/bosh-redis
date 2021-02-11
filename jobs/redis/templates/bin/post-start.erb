@@ -6,6 +6,7 @@
   if_link('sentinel_slave_conn'){ |x| sentinel_slave=x } -%>
 
 ERR=0;
+DEPLAY="1";
 <%- if !sentinel.nil? && master.p('replication') -%>
 CLI="/var/vcap/packages/redis/bin/redis-cli";
 REDIS_IP="127.0.0.1";
@@ -65,6 +66,7 @@ then
   is_connected=0;
   while [[ ${is_connected} -eq 0 ]] && [[ ${ERR} -eq 0 ]];
   do
+    sleep "${DEPLAY}";
     MSG="$("${CLI}" \
       -h ${REDIS_IP} \
       -p ${REDIS_PORT} \
