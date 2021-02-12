@@ -1,6 +1,6 @@
 #!/bin/bash
 <%- master=link('redis_conn')
-  slave=link('redis_conn')
+  slave=nil
   if_link('slave_conn'){ |x| slave=x }
   sentinel=nil
   if_link('redis_sentinel_conn'){ |x| sentinel=x }
