@@ -1,7 +1,7 @@
 #!/bin/bash
 <%- sentinel=link('redis_sentinel_conn') -%>
 
-ERR=0
+ERR=0;
 CLI="/var/vcap/packages/redis/bin/redis-cli";
 STORE_DIR="<%= p('dir') %>";
 CONF_DIR="/var/vcap/jobs/redis_sentinel/config";

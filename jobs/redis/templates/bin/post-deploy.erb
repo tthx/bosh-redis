@@ -280,7 +280,6 @@ then
       if [[ ${MASTER_INSTANCES} -eq ${AVAILABLE_NODES} ]];
       then
         echo "All required Redis master nodes [${MASTER_INSTANCES}] are available";
-        ERR=0;
       else
         echo "ERROR: The required Redis master nodes [${MASTER_INSTANCES}] is not equal to the available master nodes [${AVAILABLE_NODES}]" >&2;
         ERR=1;
@@ -289,7 +288,6 @@ then
       if [[ ${SLAVE_INSTANCES} -eq ${AVAILABLE_NODES} ]];
       then
         echo "All required Redis slave nodes [${SLAVE_INSTANCES}] are available";
-        ERR=0;
       else
         echo "ERROR: The required Redis slave nodes [${SLAVE_INSTANCES}] is not equal to the available slave nodes [${AVAILABLE_NODES}]" >&2;
         ERR=1;
