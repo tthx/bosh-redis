@@ -29,12 +29,11 @@ TLS_KEY_FILE="${TLS_KEYS_DIR}/<%= p('tls_key_file') %>";
 REDIS_CRED+=" --key ${TLS_KEY_FILE}";
 TLS_CA_CERT_FILE="${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
 REDIS_CRED+=" --cacert ${TLS_CA_CERT_FILE}";
-<%- end -%>
-
+<%- end
+  if !sentinel.nil? && master.p('replication') && master.instances.find{ |x| x.bootstrap }.address.eql?(spec.address) -%>
 #
 # Bind to Sentinel
 #
-<%- if !sentinel.nil? && master.p('replication') && master.instances.find{ |x| x.bootstrap }.address.eql?(spec.address) -%>
 SENTINEL_PORT="<%= sentinel.p('port') %>";
 SENTINEL_CRED="";
 <%- sentinel.if_p('password') do |x|
@@ -112,12 +111,8 @@ then
     fi
   done
 fi
-<%- end -%>
-
-#
-# Build Redis cluster
-#
-<%- if master.p('cluster_enabled').eql?('yes') && master.instances.find{ |x| x.bootstrap }.address.eql?(spec.address)
+<%- end
+  if master.p('cluster_enabled').eql?('yes') && master.instances.find{ |x| x.bootstrap }.address.eql?(spec.address)
   node_port=master.p('port')
   if master.p('tls') && master.p('tls_cluster')
     node_port=master.p('tls_port')
@@ -152,6 +147,9 @@ fi
   if replicas_per_node>0 && master_instances*replicas_per_node>slave_instances
     STDERR.puts "WARNING: Not enough slave: masters [#{master_instances}], slaves [#{slave_instances}], slaves per master [#{replicas_per_node}]"
   end -%>
+#
+# Build Redis cluster
+#
 MASTER_ADDRESSES="<%= master_addresses %>";
 MASTER_INSTANCES="<%= master_instances %>";
 SLAVE_ADDRESSES="<%= slaves_addresses %>";

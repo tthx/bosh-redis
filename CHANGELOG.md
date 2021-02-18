@@ -1,14 +1,12 @@
 ## redis-orange 1.0.3.1
 - Added:
-  - post-start in Redis job,
+  - pre-start, post-start and pre-stop in Redis job,
   - pre-start and pre-stop to Redis Sentinel job
   
-  to support BOSH recreate and Redis high availability with Redis Sentinel. Your deployment must be serial to support this feature.
-- Added pre-stop to Redis job to remove Redis servers from shared Redis Sentinel.
-- Since Redis 6.0.7, directory where is located Redis Sentinel's configuration file must have read-write access for the Redis Sentinel process user.
+  to support BOSH recreate to support Redis high availability with Redis Sentinel and Redis Cluster high availability. Your deployment must be serial and having a persistent storage to support this feature.
 - Components update:
   - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
-  - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.16.0,
+  - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.17.0,
   - [*OpenJDK*](https://openjdk.java.net/) 15.0.1 -> 15.0.2,
   - [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 -> 2.4.2,
   - [*Spring Cloud Open Service Broker*](https://spring.io/projects/spring-cloud-open-service-broker) 3.1.2 -> 3.3.0,
