@@ -20,7 +20,7 @@ chown vcap:vcap \
 
 export JAVA_HOME=/var/vcap/packages/openjdk/jdk;
 export PATH=${JAVA_HOME}/bin:${PATH};
-export JAVA_OPTS="-XX:+UseG1GC -XX:+ResizeTLAB -XX:+UseNUMA -XX:-ResizePLAB-Xms256m -Xmx256m";
+export JAVA_OPTS="-XX:+UseG1GC -XX:+ResizeTLAB -XX:+UseNUMA -XX:-ResizePLAB -Xms256m -Xmx256m";
 
 case $1 in
   start)
