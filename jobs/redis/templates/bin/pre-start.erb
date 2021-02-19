@@ -4,7 +4,7 @@
 ERR=0;
 <%- if master.p('cluster_enabled').eql?('yes') -%>
 RUN_DIR="<%= p('run_dir') %>";
-STORE_DIR="<%= p('dir') %>";
+STORE_DIR="<%= p('store_dir') %>";
 CONF_FILE_NAME="<%= 'nodes-'+master.p('port')+'.conf' %>";
 if [[ -f "${STORE_DIR}/config/${CONF_FILE_NAME}" ]];
 then
