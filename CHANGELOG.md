@@ -8,7 +8,7 @@
   - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
   - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.17.0,
   - [*OpenJDK*](https://openjdk.java.net/) 15.0.1 -> 15.0.2,
-  - [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 -> 2.4.2,
+  - [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 -> 2.4.3,
   - [*Spring Cloud Open Service Broker*](https://spring.io/projects/spring-cloud-open-service-broker) 3.1.2 -> 3.3.0,
   - [*havegd*](https://www.issihosts.com/haveged/) 1.9.13 -> 1.9.14.
 
