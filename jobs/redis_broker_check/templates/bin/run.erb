@@ -1,6 +1,7 @@
 #!/bin/bash
 <% broker=link('redis_broker_conn') %>
 
+ERR=0;
 IP="127.0.0.1";
 <%- if broker.p('bind') -%>
 IP="<%= spec.ip %>";

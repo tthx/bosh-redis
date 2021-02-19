@@ -24,6 +24,7 @@ CRED+=" --cacert ${TLS_KEYS_DIR}/<%= p('tls_ca_cert_file') %>";
 STORE_DIR="<%= p('store_dir') %>";
 CONF_DIR="/var/vcap/jobs/redis_sentinel/config";
 CONF_FILE_NAME="redis_sentinel.conf";
+
 if [[ "${BOSH_DEPLOYMENT_NEXT_STATE}" == "delete" ]];
 then
   rm -f "${STORE_DIR}/config/${CONF_FILE_NAME}";
