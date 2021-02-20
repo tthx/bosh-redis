@@ -16,13 +16,13 @@ instance_groups:
     release: ((release_name))
     properties:
       bind: ((redis_bind))
-      port: '0'
+      port: ((redis_port))
       password: ((redis_password))
       admin_password: ((redis_admin_password))
       exporter_password: ((redis_exporter_password))
       maxmemory: ((redis_maxmemory))
       maxmemory_policy: ((redis_maxmemory_policy))
-      tls: true
+      tls: ((redis_tls))
       tls_ca_certificate: ((redis_ca_certificate))
       tls_ca_private_key: ((redis_ca_private_key))
       tls_dh_length: ((redis_dh_length))
@@ -33,13 +33,13 @@ instance_groups:
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
-      tls: true
+      tls: ((redis_broker_tls))
   - name: redis_broker_check-1.5
     release: ((release_name))
   - name: redis_exporter
     release: ((release_name))
     properties:
-      skip_tls_verification: true
+      skip_tls_verification: ((redis_exporter_skip_tls_verification))
 
 variables:
 - name: redis_password
@@ -63,6 +63,6 @@ releases:
 update:
   canaries: 2
   canary_watch_time: 30000-60000
-  max_in_flight: 2
+  max_in_flight: 1
   update_watch_time: 30000-60000
   serial: false
