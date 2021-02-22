@@ -88,10 +88,6 @@ To avoid persistence and to maintain automatic restart, we add a delay before st
   > [Even if you have persistence disabled, Redis will need to perform RDB saves if you use replication, unless you use the new diskless replication feature. If you have no disk usage on the master, make sure to enable diskless replication.](https://redis.io/topics/admin)
 - If you use persistence, the start delay is avoided.
 
-## Redis and Redis Sentinel Exporters Collocation
-
-In our release, each Redis instance has its collocated Redis exporter instance, and each Redis Sentinel instance has its collocated Redis Sentinel exporter instance. So Redis exporter and Redis Sentinel exporter are listen on the loop-back network interface for monitoring Redis and Redis Sentinel. Redis and Redis Sentinel, in addition to others networks interfaces, are binding to the loop-back network interface too.
-
 ## Usage
 
 ### Clone the repository
