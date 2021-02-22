@@ -7,7 +7,7 @@ instance_groups:
   instances: ((node_count))
   vm_type: ((default_vm_type))
   stemcell: default
-  persistent_disk_type: ((default_persistent_disk_type))
+  persistent_disk: ((persistent_disk_size))
   networks:
   - name: ((default_network))
   jobs:
@@ -19,21 +19,21 @@ instance_groups:
       slave_conn: nil
     properties:
       bind: ((redis_bind))
-      port: '0'
+      port: ((redis_port))
       password: ((redis_password))
       admin_password: ((redis_admin_password))
       exporter_password: ((redis_exporter_password))
+      replica_password: ((redis_replica_password))
       maxmemory: ((redis_maxmemory))
       maxmemory_policy: ((redis_maxmemory_policy))
       cluster_enabled: ((redis_cluster_enabled))
-      replica_password: ((redis_replica_password))
       cluster_replicas_per_node: ((replicas_per_node_count))
-      tls: true
+      tls: ((redis_tls))
       tls_ca_certificate: ((redis_ca_certificate))
       tls_ca_private_key: ((redis_ca_private_key))
       tls_dh_length: ((redis_dh_length))
-      tls_replication: true
-      tls_cluster: true
+      tls_replication: ((redis_tls_replication))
+      tls_cluster: ((redis_tls_cluster))
   - name: redis_check
     release: ((release_name))
     consumes:
@@ -41,13 +41,12 @@ instance_groups:
   - name: redis_exporter
     release: ((release_name))
     properties:
-      skip_tls_verification: true
+      skip_tls_verification: ((redis_exporter_skip_tls_verification))
 - name: broker
   azs: [((default_az))]
   instances: 1
   vm_type: ((default_vm_type))
   stemcell: default
-  persistent_disk_type: ((default_persistent_disk_type))
   networks:
   - name: ((default_network))
   jobs:
@@ -60,7 +59,7 @@ instance_groups:
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
-      tls: true
+      tls: ((redis_broker_tls))
   - name: redis_broker_check
     release: ((release_name))
 

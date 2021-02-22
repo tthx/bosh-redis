@@ -7,10 +7,11 @@ instance_groups:
   instances: ((node_count))
   vm_type: ((default_vm_type))
   stemcell: default
-  persistent_disk_type: ((default_persistent_disk_type))
   networks:
   - name: ((default_network))
   jobs:
+  - name: haveged
+    release: ((release_name))
   - name: redis
     release: ((release_name))
     properties:
@@ -27,6 +28,7 @@ instance_groups:
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
+      tls: ((redis_broker_tls))
   - name: redis_broker_check
     release: ((release_name))
   - name: redis_exporter
@@ -35,20 +37,12 @@ instance_groups:
 variables:
 - name: redis_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_admin_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_exporter_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_broker_password
   type: password
-  parameters:
-    length: ((password_length))
 
 stemcells:
 - alias: default
@@ -62,6 +56,6 @@ releases:
 update:
   canaries: 2
   canary_watch_time: 30000-60000
-  max_in_flight: 2
+  max_in_flight: 1
   update_watch_time: 30000-60000
   serial: false

@@ -10,6 +10,8 @@ instance_groups:
   networks:
   - name: ((default_network))
   jobs:
+  - name: haveged
+    release: ((release_name))
   - name: redis
     release: ((release_name))
     properties:

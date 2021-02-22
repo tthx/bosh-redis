@@ -13,66 +13,33 @@ instance_groups:
   jobs:
   - name: redis
     release: ((release_name))
-    provides:
-      redis_conn: {as: master}
     consumes:
-      redis_conn: {from: master}
       slave_conn: nil
-      redis_sentinel_conn: {from: sentinel_master}
-      sentinel_slave_conn: {from: sentinel_slave}
+      sentinel_slave_conn: nil
     properties:
       bind: ((redis_bind))
-      maxmemory: ((redis_maxmemory))
-      maxmemory_policy: ((redis_maxmemory_policy))
-      replication: ((redis_replication))
       password: ((redis_password))
       admin_password: ((redis_admin_password))
       exporter_password: ((redis_exporter_password))
       replica_password: ((redis_replica_password))
       sentinel_password: ((redis_sentinel_user_password))
+      maxmemory: ((redis_maxmemory))
+      maxmemory_policy: ((redis_maxmemory_policy))
+      replication: ((redis_replication))
   - name: redis_check
     release: ((release_name))
     consumes:
-      redis_conn: {from: master}
       slave_conn: nil
-      redis_sentinel_conn: {from: sentinel_master}
-      sentinel_slave_conn: {from: sentinel_slave}
+      sentinel_slave_conn: nil
   - name: redis_exporter
     release: ((release_name))
-    consumes:
-      redis_conn: {from: master}
   - name: redis_sentinel
     release: ((release_name))
-    provides:
-      redis_sentinel_conn: {as: sentinel_master}
-    consumes:
-      redis_sentinel_conn: {from: sentinel_master}
     properties:
       bind: ((redis_bind))
       password: ((redis_sentinel_password))
   - name: redis_sentinel_exporter
     release: ((release_name))
-    consumes:
-      redis_sentinel_conn: {from: sentinel_master}
-- name: sentinel-slave
-  azs: [((default_az))]
-  instances: ((slave_node_count))
-  vm_type: ((default_vm_type))
-  stemcell: default
-  persistent_disk: ((persistent_disk_size))
-  networks:
-  - name: ((default_network))
-  jobs:
-  - name: redis_sentinel
-    release: ((release_name))
-    provides:
-      redis_sentinel_conn: {as: sentinel_slave}
-    consumes:
-      redis_sentinel_conn: {from: sentinel_master}
-  - name: redis_sentinel_exporter
-    release: ((release_name))
-    consumes:
-      redis_sentinel_conn: {from: sentinel_master}
 - name: broker
   azs: [((default_az))]
   instances: 1
@@ -81,13 +48,10 @@ instance_groups:
   networks:
   - name: ((default_network))
   jobs:
+  - name: haveged
+    release: ((release_name))
   - name: redis_broker-1.5
     release: ((release_name))
-    consumes:
-      redis_conn: {from: master}
-      slave_conn: nil
-      redis_sentinel_conn: {from: sentinel_master}
-      sentinel_slave_conn: {from: sentinel_slave}
     properties:
       bind: ((redis_bind))
       password: ((redis_broker_password))
@@ -123,6 +87,6 @@ releases:
 update:
   canaries: 2
   canary_watch_time: 60000-120000
-  max_in_flight: 4
+  max_in_flight: 5
   update_watch_time: 60000-120000
   serial: true
