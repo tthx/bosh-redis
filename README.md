@@ -107,7 +107,7 @@ bosh upload-release
 
 #### Single Redis Server
 
-A deployment example manifest is: [redis-tls.yml](manifests-1.5/redis.yml)
+A deployment example manifest is: [redis.yml](manifests-1.5/redis.yml)
 
 With the following example variables file: [redis.yml](secrets/redis.yml)
 
@@ -155,15 +155,15 @@ This release supports at most two kinds of instance groups:
 - To enable Redis High Availability with Redis Sentinel, `replication` (default: `false`) property must be set to `true`.
 - The Redis Sentinel exporter we use doesn't support, yet, TLS/SSL connections. So we need to enable TCP connections by setting a non zero value to TCP port in Redis Sentinel instance. Obviously, this put a potential security hole. So, if you don't need Redis Sentinel exporter, you can disable TCP connections by setting `0` to `port` property in Redis Sentinel instance.
 
-A deployment example manifest is: [redis-sentinel-tls.yml](manifests-1.5/redis-sentinel.yml)
+A deployment example manifest is: [redis-sentinel.yml](manifests-1.5/redis-sentinel.yml)
 
-With the following example variables file: [redis-sentinel-tls.yml](secrets/redis-sentinel.yml)
+With the following example variables file: [redis-sentinel.yml](secrets/redis-sentinel.yml)
 
 ##### With Distinct AZs
 
-A deployment example manifest is: [redis-sentinel-azs-tls.yml](manifests-1.5/redis-sentinel-azs.yml)
+A deployment example manifest is: [redis-sentinel-azs.yml](manifests-1.5/redis-sentinel-azs.yml)
 
-With the following example variables file: [redis-sentinel-azs-tls.yml](secrets/redis-sentinel-azs.yml)
+With the following example variables file: [redis-sentinel-azs.yml](secrets/redis-sentinel-azs.yml)
 
 #### Redis Cluster with High Availability
 
@@ -196,12 +196,12 @@ So, take care to set:
 - If you set a slave group, but let `cluster_replicas_per_node` to `0`, High Availability feature is disable.
 - When you enable Redis Cluster with High Availability feature, take care about the `min_replicas_to_write` (default: `0`) property. See release specifications for details.
 
-A deployment example manifest is: [redis-cluster-tls.yml](manifests-1.5/redis-cluster.yml)
+A deployment example manifest is: [redis-cluster.yml](manifests-1.5/redis-cluster.yml)
 
-With the following example variables file: [redis-cluster-tls.yml](secrets/redis-cluster.yml)
+With the following example variables file: [redis-cluster.yml](secrets/redis-cluster.yml)
 
 ##### With Distinct AZs
 
-A deployment example manifest is: [redis-cluster-azs-tls.yml](manifests-1.5/redis-cluster-azs.yml)
+A deployment example manifest is: [redis-cluster-azs.yml](manifests-1.5/redis-cluster-azs.yml)
 
-With the following example variables file: [redis-cluster-azs-tls.yml](secrets/redis-cluster-azs.yml)
+With the following example variables file: [redis-cluster-azs.yml](secrets/redis-cluster-azs.yml)
