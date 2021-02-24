@@ -77,32 +77,18 @@ instance_groups:
 variables:
 - name: redis_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_admin_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_exporter_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_replica_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_sentinel_user_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_sentinel_password
   type: password
-  parameters:
-    length: ((password_length))
 - name: redis_broker_password
   type: password
-  parameters:
-    length: ((password_length))
 
 stemcells:
 - alias: default
