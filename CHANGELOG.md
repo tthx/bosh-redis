@@ -5,7 +5,7 @@
   
   to support BOSH recreate to support Redis high availability with Redis Sentinel and Redis Cluster high availability. Your deployment must be serial and having a persistent storage to support this feature.
 - Components update:
-  - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.10,
+  - [*Redis*](https://redis.io/) 6.0.9 -> 6.0.11,
   - [*redis_exporter*](https://github.com/oliver006/redis_exporter) 1.12.1 -> 1.17.1,
   - [*OpenJDK*](https://openjdk.java.net/) 15.0.1 -> 15.0.2,
   - [*Spring Boot*](https://spring.io/projects/spring-boot) 2.3.5 -> 2.4.3,
