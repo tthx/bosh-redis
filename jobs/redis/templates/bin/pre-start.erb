@@ -37,6 +37,7 @@ then
     ERR=1;
     echo "ERROR: Unable to copy ${STORE_DIR}/config/${CONF_FILE_NAME} to ${RUN_DIR}/." >&2;
   else
+    chown vcap:vcap "${RUN_DIR}/${CONF_FILE_NAME}";
     echo "Redis Cluster backup file ${STORE_DIR}/config/${CONF_FILE_NAME} restored in ${RUN_DIR}/.";
   fi
 fi
