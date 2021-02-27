@@ -1,7 +1,7 @@
 #!/bin/bash
 <%- master=link('redis_conn')
   slave=nil
-  slave=link('slave_conn')
+  if_link('slave_conn'){ |x| slave=x }
   sentinel=nil
   if_link('redis_sentinel_conn'){ |x| sentinel=x }
   sentinel_slave=nil
