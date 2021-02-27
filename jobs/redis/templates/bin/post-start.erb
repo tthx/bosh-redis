@@ -86,7 +86,7 @@ do
     "${REDIS_PORT}" != "$(echo -e "${MSG}"|grep "${REDIS_PORT}")" ]];
   then
     ((is_replica++));
-    echo "Sentinel [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
+    echo -e "Sentinel [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica:\n${MSG}";
   fi
 done
 
@@ -112,24 +112,27 @@ MYID="$("${CLI}" \
   CLUSTER MYID)";
 if [[ ${?} -eq 0 ]];
 then
-  is_master=0;
+  is_replica=0;
   for x in ${NODES_ADDRESSES};
   do
     MSG="$("${CLI}" \
       -h "${x}" \
       -p "${REDIS_PORT}" \
       ${REDIS_CRED} \
-      CLUSTER REPLICAS ${MYID})";
-    if [[ ${?} -eq 0 ]];
+      CLUSTER NODES)";
+    if [[ ${?} -eq 0 ]] && \
+      [[ $(echo "${MSG}" | \
+        awk -v myid="${MYID}" '{if(($1==myid) && ($3!="master")) print 1;}') -eq 1 ]];
     then
-      ((is_master++));
-      echo "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master: [${MSG}]";
+      ((is_replica++));
+      echo -e "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica:\n${MSG}";
     fi
   done
 
-  if [[ ${is_replica} -gt 0 ]];
+  if [[ ${is_replica} -eq 0 ]];
   then
-    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
+    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master.";
+  else
     wait_replica_sync;
   fi
 else
