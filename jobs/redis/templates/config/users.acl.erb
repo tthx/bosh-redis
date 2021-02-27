@@ -26,7 +26,7 @@ user <%= master.p('replica_user') %> on +psync +replconf +ping <%= password %>
       password='>'+x
     end
   end -%>
-user <%= master.p('sentinel_user') %> on allchannels +multi +slaveof +ping +exec +subscribe +config|rewrite +role +publish +info +client|setname +client|kill +script|kill <%= password %>
+user <%= master.p('sentinel_user') %> on +multi +slaveof +ping +exec +subscribe +config|rewrite +role +publish +info +client|setname +client|kill +script|kill <%= password %>
 <%- password='nopass'
   master.if_p('exporter_password') do |x|
     unless x.to_s.empty?

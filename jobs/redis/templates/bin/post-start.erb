@@ -123,7 +123,7 @@ then
     if [[ ${?} -eq 0 ]];
     then
       ((is_master++));
-      echo "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master.";
+      echo "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master: [${MSG}]";
     fi
   done
 
