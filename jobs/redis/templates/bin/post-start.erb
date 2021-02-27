@@ -122,7 +122,7 @@ then
       CLUSTER NODES)";
     if [[ ${?} -eq 0 ]] && \
       [[ -n "${MSG}" ]] && \
-      [[ echo -e "${MSG}" | \
+      [[ $(echo -e "${MSG}" | \
         awk -v myid="${MYID}" '\
           BEGIN {i=0;} \
             {if($4==myid) i++;} \
