@@ -51,8 +51,6 @@ instance_groups:
 variables:
 - name: redis_sentinel_password
   type: password
-  parameters:
-    length: ((password_length))
 
 stemcells:
 - alias: default
