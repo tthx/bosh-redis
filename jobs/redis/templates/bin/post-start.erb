@@ -112,31 +112,24 @@ MYID="$("${CLI}" \
   CLUSTER MYID)";
 if [[ ${?} -eq 0 ]];
 then
-  is_replica=0;
+  is_master=0;
   for x in ${NODES_ADDRESSES};
   do
     MSG="$("${CLI}" \
       -h "${x}" \
       -p "${REDIS_PORT}" \
       ${REDIS_CRED} \
-      CLUSTER NODES)";
-    if [[ ${?} -eq 0 ]] && \
-      [[ -n "${MSG}" ]] && \
-      [[ $(echo -e "${MSG}" | \
-        awk -v myid="${MYID}" '\
-          BEGIN {i=0;} \
-            {if($4==myid) i++;} \
-          END {print i;}') -eq 0 ]];
+      CLUSTER REPLICAS ${MYID})";
+    if [[ ${?} -eq 0 ]];
     then
-      ((is_replica++));
-      echo "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
+      ((is_master++));
+      echo "Node [${x}]: Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master.";
     fi
   done
 
-  if [[ ${is_replica} -eq 0 ]];
+  if [[ ${is_replica} -gt 0 ]];
   then
-    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a master.";
-  else
+    echo "Redis instance [${REDIS_IP}:${REDIS_PORT}] is a replica.";
     wait_replica_sync;
   fi
 else
